@@ -1,7 +1,8 @@
 import type { Metadata } from "next";
-import { Suspense } from "react";
 import ScheduleClient from "./ScheduleClient";
-import { Loader2 } from "lucide-react";
+import { anilistApi } from "@/lib/api/anilist";
+
+export const revalidate = 3600;
 
 export const metadata: Metadata = {
   title: "Anime Airing Schedule & Simulcast Release Calendar",
@@ -22,16 +23,10 @@ export const metadata: Metadata = {
   },
 };
 
-export default function Page() {
+export default async function Page() {
+  const scheduleAnime = await anilistApi.getAiringSchedule(50).catch(() => []);
+
   return (
-    <Suspense 
-      fallback={
-        <div className="flex-1 flex items-center justify-center min-h-screen bg-void-black">
-          <Loader2 className="w-12 h-12 text-cyber-cyan animate-spin" />
-        </div>
-      }
-    >
-      <ScheduleClient />
-    </Suspense>
+    <ScheduleClient initialSchedule={scheduleAnime} />
   );
 }

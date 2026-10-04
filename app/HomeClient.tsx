@@ -3,21 +3,29 @@
 import Image from "next/image";
 import Link from "next/link";
 import { Play, CalendarClock, ChevronLeft, ChevronRight } from "lucide-react";
-import { useTrendingAnime, useRecentEpisodes, useAniListBanners, useSchedule, useTopThisWeek } from "@/hooks/useAnime";
 import { useWatchStore, getAnimeResumeInfo } from "@/store/useWatchStore";
 import { timeAgo } from "@/lib/timeAgo";
 import { useMounted } from "@/hooks/useMounted";
 import { HeroCarousel } from "@/components/home/HeroCarousel";
 import { useRef } from "react";
-import { Grid } from 'ldrs/react';
-import 'ldrs/react/Grid.css';
+import type { AniListAnime } from "@/lib/api/anilist";
 
-export default function HomeClient() {
-  const { data: heroAnimeList, isLoading: isHeroLoading } = useAniListBanners(10, 1);
-  const { data: trendingAnime, isLoading: isTrendingLoading } = useTrendingAnime(15, 2);
-  const { data: recentEpisodes } = useRecentEpisodes(20);
-  const { data: topThisWeek, isLoading: isTopThisWeekLoading } = useTopThisWeek(9);
-  const { data: scheduleAnime } = useSchedule(15);
+interface HomeClientProps {
+  heroAnimeList: AniListAnime[];
+  trendingAnime: AniListAnime[];
+  recentEpisodes: AniListAnime[];
+  topThisWeek: AniListAnime[];
+  scheduleAnime: AniListAnime[];
+}
+
+export default function HomeClient({
+  heroAnimeList,
+  trendingAnime,
+  recentEpisodes,
+  topThisWeek,
+  scheduleAnime
+}: HomeClientProps) {
+  // Data passed from server component
 
   // Hydration safe store access
   const history = useWatchStore((state) => state.history);
@@ -34,14 +42,6 @@ export default function HomeClient() {
   };
 
   const historyItems = Object.values(history).sort((a, b) => b.timestamp - a.timestamp).slice(0, 5);
-
-  if (isHeroLoading || isTrendingLoading || isTopThisWeekLoading) {
-    return (
-      <div className="flex-1 flex items-center justify-center min-h-screen bg-void-black">
-        <Grid size="60" speed="1" color="#FF003C" />
-      </div>
-    );
-  }
 
   return (
     <div className="flex flex-col min-h-screen">

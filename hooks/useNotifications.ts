@@ -25,9 +25,10 @@ export function useNotifications() {
       if (!res.ok) throw new Error("Failed to fetch notifications");
       return res.json();
     },
-    refetchInterval: 30000, // Poll every 30s
-    refetchIntervalInBackground: false, // Don't poll when tab is hidden
-    refetchOnWindowFocus: true, // Fetch immediately when tab gets focus
+    refetchInterval: 1800000, // Poll every 30m
+    refetchIntervalInBackground: false, 
+    refetchOnWindowFocus: false, 
+    staleTime: 60000, 
   });
 
   const markAsReadMutation = useMutation({

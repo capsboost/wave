@@ -2,6 +2,8 @@ import type { Metadata } from "next";
 import { anilistApi } from "@/lib/api/anilist";
 import AnimeClient from "./AnimeClient";
 
+export const revalidate = 3600; // Cache for 1 hour
+
 export async function generateMetadata({
   params,
 }: {

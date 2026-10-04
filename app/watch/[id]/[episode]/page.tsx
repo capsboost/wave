@@ -3,6 +3,8 @@ import { Suspense } from "react";
 import { anilistApi } from "@/lib/api/anilist";
 import WatchClient from "./WatchClient";
 
+export const revalidate = 3600; // Cache for 1 hour
+
 export async function generateMetadata({
   params,
 }: {

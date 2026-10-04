@@ -4,12 +4,13 @@ import Image from "next/image";
 import Link from "next/link";
 import { useState, useEffect } from "react";
 import { CalendarClock } from "lucide-react";
-import { useSchedule } from "@/hooks/useAnime";
-import { Grid } from 'ldrs/react';
-import 'ldrs/react/Grid.css';
+import type { AniListAnime } from "@/lib/api/anilist";
 
-export default function ScheduleClient() {
-  const { data: scheduleAnime, isLoading } = useSchedule(50);
+interface ScheduleClientProps {
+  initialSchedule: AniListAnime[];
+}
+
+export default function ScheduleClient({ initialSchedule: scheduleAnime }: ScheduleClientProps) {
 
   const formatAiringDate = (timestamp: number) => {
     const date = new Date(timestamp * 1000);
@@ -130,13 +131,7 @@ export default function ScheduleClient() {
   const groupedSchedule = getGroupedSchedule();
 
   let content;
-  if (isLoading) {
-    content = (
-      <div className="flex-1 flex items-center justify-center h-[50vh]">
-        <Grid size="60" speed="1" color="#FF003C" />
-      </div>
-    );
-  } else if (!scheduleAnime || scheduleAnime.length === 0) {
+  if (!scheduleAnime || scheduleAnime.length === 0) {
     content = (
       <div className="flex flex-col items-center justify-center h-[50vh] text-center">
         <div className="text-6xl mb-4">👾</div>
