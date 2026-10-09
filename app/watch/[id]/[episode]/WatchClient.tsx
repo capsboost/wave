@@ -143,8 +143,11 @@ function usePlayerEvents(
             window.dispatchEvent(new CustomEvent('megaplay-complete'));
           }
         }
-      } else if ((data.event === "complete" || data.event === "ended") && autoNext) {
-        if (!hasTriggeredRef.current) {
+      } else if (data.event === "pause" || data.event === "paused" || data.event === "STOP") {
+        window.dispatchEvent(new CustomEvent('wave-sync-progress'));
+      } else if (data.event === "complete" || data.event === "ended") {
+        window.dispatchEvent(new CustomEvent('wave-sync-progress'));
+        if (autoNext && !hasTriggeredRef.current) {
           hasTriggeredRef.current = true;
           window.dispatchEvent(new CustomEvent('megaplay-complete'));
         }
@@ -152,7 +155,10 @@ function usePlayerEvents(
     }
 
     window.addEventListener("message", handleMessage);
-    return () => window.removeEventListener("message", handleMessage);
+    return () => {
+      window.removeEventListener("message", handleMessage);
+      window.dispatchEvent(new CustomEvent('wave-sync-progress'));
+    };
   }, [provider, id, updateProgress, autoNext, setStreamFailed]);
 }
 
@@ -199,13 +205,14 @@ function useAutoNextEpisode(
 interface WatchClientProps {
   readonly id: string;
   readonly episode: string;
+  readonly initialAnime?: AniListAnime;
 }
 
-export default function WatchClient({ id, episode }: WatchClientProps) {
+export default function WatchClient({ id, episode, initialAnime }: WatchClientProps) {
   const searchParams = useSearchParams();
   const initLang = searchParams.get("lang") === "dub" ? "dub" : "sub";
 
-  const { data: anime, isLoading: isAnimeLoading } = useAnimeDetails(id);
+  const { data: anime, isLoading: isAnimeLoading } = useAnimeDetails(id, initialAnime);
   const { counts, isLoading: isCountsLoading } = useEpisodeCounts(id);
   const addToHistory = useWatchStore((state) => state.addToHistory);
   const updateProgress = useWatchStore((state) => state.updateProgress);
@@ -249,8 +256,7 @@ export default function WatchClient({ id, episode }: WatchClientProps) {
   usePlayerEvents(id, provider, autoNext, setStreamFailed, updateProgress);
   useAutoNextEpisode(id, episode, maxAvailableEpisodes, effectiveLanguage, counts);
 
-
-  if (isAnimeLoading || isCountsLoading) {
+  if ((isAnimeLoading && !anime) || (!anime && isCountsLoading)) {
     return (
       <div className="flex-1 flex flex-col items-center justify-center min-h-screen bg-void-black relative">
         <div className="absolute inset-0 pointer-events-none opacity-5 bg-[repeating-linear-gradient(0deg,transparent,transparent_2px,rgba(255,255,255,0.03)_2px,rgba(255,255,255,0.03)_4px)]" />

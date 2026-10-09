@@ -26,8 +26,12 @@ export async function POST(req: Request) {
     const hashArray = Array.from(new Uint8Array(hashBuffer));
     const visitorHash = hashArray.map(b => b.toString(16).padStart(2, "0")).join("");
 
-    // Check for user session (optional, for tying views to registered users if logged in)
-    const session = await auth.api.getSession({ headers: headersList }).catch(() => null);
+    // Check for user session (only if an auth session cookie exists, avoiding unnecessary DB queries for guests)
+    const cookieHeader = headersList.get("cookie") || "";
+    const hasAuthCookie = cookieHeader.includes("better-auth.session_token") || cookieHeader.includes("__Secure-better-auth.session_token");
+    const session = hasAuthCookie
+      ? await auth.api.getSession({ headers: headersList }).catch(() => null)
+      : null;
 
     // Insert the page view event
     await db.insert(pageViews).values({

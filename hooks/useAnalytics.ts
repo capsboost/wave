@@ -1,14 +1,22 @@
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { usePathname } from "next/navigation";
 
 export function useAnalytics() {
   const pathname = usePathname();
+  const lastTrackedRef = useRef<{ path: string; time: number }>({ path: "", time: 0 });
 
   useEffect(() => {
     if (!pathname) return;
 
     // Ignore admin routes
     if (pathname.startsWith("/admin")) return;
+
+    // Deduplicate identical path visits within 10 seconds
+    const now = Date.now();
+    if (lastTrackedRef.current.path === pathname && (now - lastTrackedRef.current.time) < 10000) {
+      return;
+    }
+    lastTrackedRef.current = { path: pathname, time: now };
 
     let animeId = undefined;
     

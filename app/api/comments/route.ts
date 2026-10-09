@@ -31,7 +31,14 @@ export async function GET(req: Request) {
       .where(and(eq(comments.animeId, animeId), eq(comments.episodeNumber, Number(episodeNumber))))
       .orderBy(desc(comments.createdAt));
 
-    return NextResponse.json({ comments: fetchedComments });
+    return NextResponse.json(
+      { comments: fetchedComments },
+      {
+        headers: {
+          "Cache-Control": "public, s-maxage=15, stale-while-revalidate=60",
+        },
+      }
+    );
   } catch {
     return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
   }

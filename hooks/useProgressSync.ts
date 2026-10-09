@@ -75,7 +75,7 @@ export function useProgressSync() {
     }
   }, [isAuthenticated, mergeFromServer]);
 
-  // On mount / login: fetch server state and merge
+  // On mount / login: fetch server state, merge, and immediately sync local offline progress to cloud
   useEffect(() => {
     if (!isAuthenticated) {
       hasFetchedRef.current = false;
@@ -84,11 +84,14 @@ export function useProgressSync() {
 
     if (!hasFetchedRef.current) {
       hasFetchedRef.current = true;
-      fetchAndMerge();
+      fetchAndMerge().then(() => {
+        // Immediately sync any local entries that were watched offline or are ahead
+        syncToServer();
+      });
     }
-  }, [isAuthenticated, fetchAndMerge]);
+  }, [isAuthenticated, fetchAndMerge, syncToServer]);
 
-  // Set up background sync interval (Push dirty every 30s, pull every 60s)
+  // Background push sync: ONLY runs if dirty entries exist (no network call if empty)
   useEffect(() => {
     if (!isAuthenticated) {
       if (intervalRef.current) {
@@ -98,14 +101,8 @@ export function useProgressSync() {
       return;
     }
 
-    let tick = 0;
     intervalRef.current = setInterval(() => {
-      syncToServer(); // push every 30s
-      
-      tick++;
-      if (tick % 2 === 0) {
-        fetchAndMerge(); // pull every 60s
-      }
+      syncToServer(); // pushes only if dirty entries exist
     }, SYNC_INTERVAL_MS);
 
     return () => {
@@ -114,26 +111,23 @@ export function useProgressSync() {
         intervalRef.current = null;
       }
     };
-  }, [isAuthenticated, syncToServer, fetchAndMerge]);
+  }, [isAuthenticated, syncToServer]);
 
-  // Fetch on window focus to immediately reflect changes from other devices
+  // Event-driven sync on pause/leave, visibilitychange, pagehide, and unload
   useEffect(() => {
     if (!isAuthenticated) return;
 
-    const handleFocus = () => {
-      fetchAndMerge();
+    const handleCustomSync = () => {
+      syncToServer();
     };
 
-    window.addEventListener("focus", handleFocus);
-    return () => window.removeEventListener("focus", handleFocus);
-  }, [isAuthenticated, fetchAndMerge]);
-
-  // Flush on page unload
-  useEffect(() => {
-    if (!isAuthenticated) return;
+    const handleVisibility = () => {
+      if (document.visibilityState === "hidden") {
+        syncToServer();
+      }
+    };
 
     const handleUnload = () => {
-      // Use sendBeacon for reliable unload sync
       const dirtyEntries = getDirtyEntries();
       for (const entry of dirtyEntries) {
         const payload = JSON.stringify({
@@ -149,7 +143,16 @@ export function useProgressSync() {
       }
     };
 
+    window.addEventListener("wave-sync-progress", handleCustomSync);
+    document.addEventListener("visibilitychange", handleVisibility);
+    window.addEventListener("pagehide", handleUnload);
     window.addEventListener("beforeunload", handleUnload);
-    return () => window.removeEventListener("beforeunload", handleUnload);
-  }, [isAuthenticated, getDirtyEntries]);
+
+    return () => {
+      window.removeEventListener("wave-sync-progress", handleCustomSync);
+      document.removeEventListener("visibilitychange", handleVisibility);
+      window.removeEventListener("pagehide", handleUnload);
+      window.removeEventListener("beforeunload", handleUnload);
+    };
+  }, [isAuthenticated, syncToServer, getDirtyEntries]);
 }

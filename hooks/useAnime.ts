@@ -1,5 +1,5 @@
 import { useQuery, useInfiniteQuery } from "@tanstack/react-query";
-import { anilistApi } from "@/lib/api/anilist";
+import { anilistApi, type AniListAnime } from "@/lib/api/anilist";
 
 
 export function useTrendingAnime(limit = 15, page = 1) {
@@ -68,10 +68,11 @@ export function useAniListBanners(limit = 10, page = 1) {
   });
 }
 
-export function useAnimeDetails(malId: string | number) {
+export function useAnimeDetails(malId: string | number, initialData?: AniListAnime) {
   return useQuery({
-    queryKey: ["anime", malId, "details"],
+    queryKey: ["anime", String(malId), "details"],
     queryFn: () => anilistApi.getAnimeDetails(malId),
+    initialData,
     staleTime: 24 * 60 * 60 * 1000, // 24 hours
     enabled: !!malId,
     retry: 1,

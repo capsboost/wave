@@ -32,7 +32,7 @@ export function ProfileAnimeCard({ animeId, dateAdded }: { animeId: string, date
           <div className="bg-void-black/80 text-neon-crimson font-label-caps text-[10px] px-2 py-1 border border-neon-crimson/50 clip-chip">
             {anime.averageScore ? (anime.averageScore / 10).toFixed(1) : "N/A"}
           </div>
-          <WatchlistButton animeId={animeId} showText={false} className="w-8 h-8 p-0" />
+          <WatchlistButton animeId={animeId} initialInList={true} showText={false} className="w-8 h-8 p-0" />
         </div>
 
         <Link href={`/anime/${animeId}`} className="absolute bottom-0 left-0 w-full p-4 z-10">

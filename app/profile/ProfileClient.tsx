@@ -11,6 +11,7 @@ import 'ldrs/react/Grid.css';
 import { ProfileAnimeCard } from "@/components/profile/ProfileAnimeCard";
 import { useWatchStore } from "@/store/useWatchStore";
 import { ConfirmModal } from "@/components/ui/ConfirmModal";
+import { useWatchlist } from "@/hooks/useWatchlist";
 
 export default function ProfileClient() {
   const { data: session, isPending } = useSession();
@@ -53,33 +54,14 @@ export default function ProfileClient() {
   const [passwordSuccess, setPasswordSuccess] = useState("");
   const [loadingPass, setLoadingPass] = useState(false);
 
-  // Data State
-  const [watchlist, setWatchlist] = useState<{ id: string; animeId: string; createdAt: string }[]>([]);
-  const [loadingData, setLoadingData] = useState(true);
+  // Data State via centralized, cached hook
+  const { items: watchlist, isLoading: loadingData } = useWatchlist();
 
   useEffect(() => {
     if (!isPending && !session) {
       router.push("/");
     }
   }, [isPending, session, router]);
-
-  useEffect(() => {
-    let isMounted = true;
-    if (session) {
-      fetch('/api/watchlist')
-        .then(res => res.json())
-        .then((watchData) => {
-          if (isMounted) {
-            if (watchData.items) setWatchlist(watchData.items);
-            setLoadingData(false);
-          }
-        })
-        .catch(() => {
-          if (isMounted) setLoadingData(false);
-        });
-    }
-    return () => { isMounted = false; };
-  }, [session]);
 
   const handleChangePassword = async (e: React.FormEvent) => {
     e.preventDefault();

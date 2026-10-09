@@ -21,15 +21,27 @@ export async function GET(
     );
     
     if (result.length > 0) {
-      return NextResponse.json(result[0]);
+      return NextResponse.json(result[0], {
+        headers: {
+          "Cache-Control": "public, s-maxage=86400, stale-while-revalidate=604800",
+        },
+      });
     }
 
     // Not found in database
-    return NextResponse.json({
-      is_sub: null,
-      is_dub: null,
-      error: "Not found in Anikoto database"
-    }, { status: 404 });
+    return NextResponse.json(
+      {
+        is_sub: null,
+        is_dub: null,
+        error: "Not found in Anikoto database",
+      },
+      {
+        status: 404,
+        headers: {
+          "Cache-Control": "public, s-maxage=3600, stale-while-revalidate=7200",
+        },
+      }
+    );
 
   } catch (error) {
     console.error("API Error reading database:", error);

@@ -25,10 +25,10 @@ export function useNotifications() {
       if (!res.ok) throw new Error("Failed to fetch notifications");
       return res.json();
     },
-    refetchInterval: 1800000, // Poll every 30m
+    refetchInterval: session?.user ? 900000 : false, // Poll every 15m ONLY if logged in, NEVER for guests
     refetchIntervalInBackground: false, 
     refetchOnWindowFocus: false, 
-    staleTime: 60000, 
+    staleTime: session?.user ? 5 * 60 * 1000 : 60 * 60 * 1000, // 5m for users, 1h for guests 
   });
 
   const markAsReadMutation = useMutation({

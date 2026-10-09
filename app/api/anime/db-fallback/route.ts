@@ -58,10 +58,25 @@ export async function GET(req: NextRequest) {
         .limit(1);
 
       if (rows.length === 0) {
-        return NextResponse.json({ error: "Anime not found in DB cache" }, { status: 404 });
+        return NextResponse.json(
+          { error: "Anime not found in DB cache" },
+          {
+            status: 404,
+            headers: {
+              "Cache-Control": "public, s-maxage=600, stale-while-revalidate=1200",
+            },
+          }
+        );
       }
 
-      return NextResponse.json({ media: mapRowToAniList(rows[0]) });
+      return NextResponse.json(
+        { media: mapRowToAniList(rows[0]) },
+        {
+          headers: {
+            "Cache-Control": "public, s-maxage=3600, stale-while-revalidate=86400",
+          },
+        }
+      );
     }
 
     // 2. Search query fallback
@@ -87,7 +102,14 @@ export async function GET(req: NextRequest) {
         .orderBy(desc(animeMetadata.average_score), desc(animeMetadata.updated_at))
         .limit(limit);
 
-      return NextResponse.json({ media: rows.map(mapRowToAniList) });
+      return NextResponse.json(
+        { media: rows.map(mapRowToAniList) },
+        {
+          headers: {
+            "Cache-Control": "public, s-maxage=3600, stale-while-revalidate=86400",
+          },
+        }
+      );
     }
 
     // 3. Trending anime fallback
@@ -99,7 +121,14 @@ export async function GET(req: NextRequest) {
         .orderBy(desc(animeMetadata.updated_at), desc(animeMetadata.average_score))
         .limit(limit);
 
-      return NextResponse.json({ media: rows.map(mapRowToAniList) });
+      return NextResponse.json(
+        { media: rows.map(mapRowToAniList) },
+        {
+          headers: {
+            "Cache-Control": "public, s-maxage=3600, stale-while-revalidate=86400",
+          },
+        }
+      );
     }
 
     // 4. Popular anime fallback (default)
@@ -110,7 +139,14 @@ export async function GET(req: NextRequest) {
       .orderBy(desc(animeMetadata.average_score), desc(animeMetadata.updated_at))
       .limit(limit);
 
-    return NextResponse.json({ media: rows.map(mapRowToAniList) });
+    return NextResponse.json(
+      { media: rows.map(mapRowToAniList) },
+      {
+        headers: {
+          "Cache-Control": "public, s-maxage=3600, stale-while-revalidate=86400",
+        },
+      }
+    );
   } catch (error) {
     console.error("[DB Fallback API Error]:", error);
     return NextResponse.json({ error: "Database fallback query failed", media: [] }, { status: 500 });

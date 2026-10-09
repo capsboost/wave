@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Suspense } from "react";
-import { anilistApi } from "@/lib/api/anilist";
+import { anilistApi, type AniListAnime } from "@/lib/api/anilist";
+import { cacheAnimeMetadataIfMissing } from "@/lib/api/cacheMetadata";
 import WatchClient from "./WatchClient";
 
 export const revalidate = 3600; // Cache for 1 hour
@@ -53,9 +54,13 @@ export default async function Page({
   const { id, episode } = await params;
 
   let episodeSchema: Record<string, unknown> | null = null;
+  let anime: AniListAnime | null = null;
   try {
-    const anime = await anilistApi.getAnimeDetails(id);
+    anime = await anilistApi.getAnimeDetails(id);
     if (anime) {
+      // Dynamically cache new anime metadata to Neon DB for Tier 3/4 fallback (0 writes if already cached)
+      cacheAnimeMetadataIfMissing(anime).catch(() => {});
+
       const title = anime.title.english || anime.title.romaji || "Anime";
       episodeSchema = {
         "@context": "https://schema.org",
@@ -83,7 +88,7 @@ export default async function Page({
         />
       )}
       <Suspense fallback={<div className="min-h-screen bg-void-black flex items-center justify-center text-neon-crimson font-mono text-sm tracking-widest uppercase">INITIALIZING FEED...</div>}>
-        <WatchClient id={id} episode={episode} />
+        <WatchClient id={id} episode={episode} initialAnime={anime || undefined} />
       </Suspense>
     </>
   );

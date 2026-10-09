@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/db";
 import { animeMetadata } from "@/db/schema";
-import { sql } from "drizzle-orm";
+import { sql, inArray } from "drizzle-orm";
 import { isSafeAnime, type AniListAnime } from "@/lib/api/anilist";
 
 export async function POST(req: NextRequest) {
@@ -60,34 +60,28 @@ export async function POST(req: NextRequest) {
       uniqueMap.set(rec.mal_id, rec);
     }
     const dedupedRecords = Array.from(uniqueMap.values());
+    if (dedupedRecords.length === 0) {
+      return NextResponse.json({ success: true, count: 0 });
+    }
 
-    // Drizzle onConflictDoUpdate batching rule applied:
-    // Always use sql`excluded.column_name`
-    await db
-      .insert(animeMetadata)
-      .values(dedupedRecords)
-      .onConflictDoUpdate({
-        target: animeMetadata.mal_id,
-        set: {
-          ani_id: sql`coalesce(excluded.ani_id, anime_metadata.ani_id)`,
-          title_english: sql`coalesce(excluded.title_english, anime_metadata.title_english)`,
-          title_romaji: sql`coalesce(excluded.title_romaji, anime_metadata.title_romaji)`,
-          cover_image_large: sql`coalesce(excluded.cover_image_large, anime_metadata.cover_image_large)`,
-          cover_image_extra_large: sql`coalesce(excluded.cover_image_extra_large, anime_metadata.cover_image_extra_large)`,
-          cover_color: sql`coalesce(excluded.cover_color, anime_metadata.cover_color)`,
-          banner_image: sql`coalesce(excluded.banner_image, anime_metadata.banner_image)`,
-          description: sql`coalesce(excluded.description, anime_metadata.description)`,
-          genres: sql`coalesce(excluded.genres, anime_metadata.genres)`,
-          episodes: sql`coalesce(excluded.episodes, anime_metadata.episodes)`,
-          format: sql`coalesce(excluded.format, anime_metadata.format)`,
-          status: sql`coalesce(excluded.status, anime_metadata.status)`,
-          average_score: sql`coalesce(excluded.average_score, anime_metadata.average_score)`,
-          season_year: sql`coalesce(excluded.season_year, anime_metadata.season_year)`,
-          updated_at: sql`excluded.updated_at`,
-        },
-      });
+    // Check which IDs already exist in the database (0 writes for existing anime)
+    const malIds = dedupedRecords.map((r) => r.mal_id);
+    const existingRows = await db
+      .select({ mal_id: animeMetadata.mal_id })
+      .from(animeMetadata)
+      .where(inArray(animeMetadata.mal_id, malIds));
 
-    return NextResponse.json({ success: true, count: dedupedRecords.length });
+    const existingIdSet = new Set(existingRows.map((r) => r.mal_id));
+    const newRecords = dedupedRecords.filter((r) => !existingIdSet.has(r.mal_id));
+
+    if (newRecords.length === 0) {
+      return NextResponse.json({ success: true, count: 0, skipped: dedupedRecords.length });
+    }
+
+    // Insert only brand new anime
+    await db.insert(animeMetadata).values(newRecords);
+
+    return NextResponse.json({ success: true, count: newRecords.length, skipped: dedupedRecords.length - newRecords.length });
   } catch (error) {
     console.error("[Cache Metadata API Error]:", error);
     return NextResponse.json({ error: "Failed to cache metadata" }, { status: 500 });

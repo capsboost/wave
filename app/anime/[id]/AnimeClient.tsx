@@ -55,10 +55,11 @@ function getCleanDescription(description?: string | null): string {
 
 interface AnimeClientProps {
   readonly id: string;
+  readonly initialAnime?: AniListAnime;
 }
 
-export default function AnimeClient({ id }: AnimeClientProps) {
-  const { data: anime, isLoading: isAnimeLoading } = useAnimeDetails(id);
+export default function AnimeClient({ id, initialAnime }: AnimeClientProps) {
+  const { data: anime, isLoading: isAnimeLoading } = useAnimeDetails(id, initialAnime);
   const [episodeChunk, setEpisodeChunk] = useState(0);
   const [language, setLanguage] = useState<"sub" | "dub">("sub");
   const [counts, setCounts] = useState<{ is_sub: number | null, is_dub: number | null } | null>(null);
@@ -165,7 +166,7 @@ export default function AnimeClient({ id }: AnimeClientProps) {
     [anime]
   );
 
-  if (isAnimeLoading) {
+  if (isAnimeLoading && !anime) {
     return (
       <div className="flex-1 flex items-center justify-center min-h-screen bg-void-black">
         <Grid size="60" speed="1" color="#FF003C" />

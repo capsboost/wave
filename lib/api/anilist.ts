@@ -33,6 +33,8 @@ export interface AniListAnime {
     month?: number | null;
     day?: number | null;
   } | null;
+  recommendations?: AniListAnime[];
+  relations?: (AniListAnime & { relationType: string })[];
 }
 
 export function isSafeAnime(anime?: AniListAnime | null): boolean {
@@ -113,22 +115,27 @@ async function fetchAniList<T>(query: string, variables: Record<string, string |
   }
 
   const isClient = typeof window !== "undefined";
-  const url = isClient ? "/api/anilist" : ANILIST_API_URL;
-  const headers = isClient
+
+  // In the browser: Call AniList GraphQL API directly (it supports CORS).
+  // This bypasses Vercel Serverless Functions completely, saving 90%+ of Function Invocations & Fluid CPU.
+  // Fall back to /api/anilist proxy only if browser-direct fetch fails (e.g. adblocker, network error).
+  const primaryUrl = isClient ? ANILIST_API_URL : ANILIST_API_URL;
+  const primaryHeaders = isClient
     ? { "Content-Type": "application/json", "Accept": "application/json" }
     : ANILIST_HEADERS;
 
   let response: Response;
   try {
-    response = await fetch(url, {
+    response = await fetch(primaryUrl, {
       method: "POST",
-      headers,
+      headers: primaryHeaders,
       body: JSON.stringify({ query, variables }),
     });
   } catch (err: unknown) {
     if (isClient) {
+      // Direct browser fetch failed; attempt proxy fallback
       try {
-        response = await fetch(ANILIST_API_URL, {
+        response = await fetch("/api/anilist", {
           method: "POST",
           headers: { "Content-Type": "application/json", "Accept": "application/json" },
           body: JSON.stringify({ query, variables }),
@@ -148,9 +155,11 @@ async function fetchAniList<T>(query: string, variables: Record<string, string |
       const retryAfterHeader = response.headers.get("Retry-After");
       const delayMs = retryAfterHeader ? Math.max(1000, Number(retryAfterHeader) * 1000) : 2000;
       await new Promise((res) => setTimeout(res, Math.min(delayMs, 5000)));
-      const retry = await fetch(url, {
+      const retryUrl = isClient ? "/api/anilist" : ANILIST_API_URL;
+      const retryHeaders = isClient ? { "Content-Type": "application/json", "Accept": "application/json" } : ANILIST_HEADERS;
+      const retry = await fetch(retryUrl, {
         method: "POST",
-        headers,
+        headers: retryHeaders,
         body: JSON.stringify({ query, variables }),
       });
       if (!retry.ok) {
@@ -202,19 +211,10 @@ async function fetchDbFallback<T>(params: Record<string, string | number>): Prom
   }
 }
 
-function writeThroughCache(anime: AniListAnime | AniListAnime[]): void {
-  if (typeof window === "undefined") return;
-  try {
-    const list = Array.isArray(anime) ? anime : [anime];
-    const safeList = list.filter(isSafeAnime);
-    if (safeList.length === 0) return;
-
-    fetch("/api/anime/cache-metadata", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ animeList: safeList }),
-    }).catch(() => {});
-  } catch {}
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+function writeThroughCache(_anime: AniListAnime | AniListAnime[]): void {
+  // Disabled on client to eliminate hundreds of thousands of redundant Vercel function invocations and Neon DB writes
+  return;
 }
 
 export const anilistApi = {

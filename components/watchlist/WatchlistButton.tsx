@@ -1,77 +1,57 @@
 "use client";
 
-import { useState, useEffect } from "react";
 import { useSession } from "@/lib/auth-client";
 import { Plus, Check, Loader2 } from "lucide-react";
 import { useAuthModal } from "@/store/useAuthModal";
+import { useWatchlist } from "@/hooks/useWatchlist";
 
 interface WatchlistButtonProps {
-  animeId: string;
+  animeId: string | number;
   className?: string;
   showText?: boolean;
+  initialInList?: boolean;
 }
 
-export function WatchlistButton({ animeId, className = "px-6 py-4", showText = true }: WatchlistButtonProps) {
+export function WatchlistButton({
+  animeId,
+  className = "px-6 py-4",
+  showText = true,
+  initialInList,
+}: WatchlistButtonProps) {
   const { data: session } = useSession();
   const { openModal } = useAuthModal();
-  const [inList, setInList] = useState(false);
-  const [loading, setLoading] = useState(true);
+  const { isInWatchlist, toggleWatchlist, isToggling, isLoading } = useWatchlist();
 
-  useEffect(() => {
-    const fetchList = async () => {
-      if (!session) {
-        setLoading(false);
-        setInList(false);
-        return;
-      }
-      try {
-        const res = await fetch('/api/watchlist');
-        const data = await res.json();
-        if (data.items) {
-          setInList(data.items.some((item: { animeId: string }) => item.animeId === String(animeId)));
-        }
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchList();
-  }, [session, animeId]);
+  const inWatchlist = session?.user ? isInWatchlist(animeId) : false;
+  const inList = (isLoading && initialInList !== undefined)
+    ? initialInList
+    : inWatchlist;
 
-  const toggleWatchlist = async () => {
+  const handleClick = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+
     if (!session) {
-      openModal('login');
+      openModal("login");
       return;
     }
-    
-    setLoading(true);
-    try {
-      const res = await fetch('/api/watchlist', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ animeId })
-      });
-      const data = await res.json();
-      if (data.action === "added") setInList(true);
-      if (data.action === "removed") setInList(false);
-    } catch (err) {
-      console.error(err);
-    } finally {
-      setLoading(false);
-    }
+    toggleWatchlist(animeId);
   };
 
   return (
-    <button 
-      onClick={toggleWatchlist}
-      disabled={loading}
-      className={`flex items-center justify-center gap-2 bg-surface-container border border-outline-variant transition-all duration-300 group clip-corner font-label-caps font-bold ${
-        inList ? 'text-cyber-cyan border-cyber-cyan hover:bg-cyber-cyan/10' : 'text-white hover:border-cyber-cyan hover:text-cyber-cyan'
+    <button
+      onClick={handleClick}
+      disabled={isToggling}
+      className={`flex items-center justify-center gap-2 bg-surface-container border border-outline-variant transition-all duration-300 group clip-corner font-label-caps font-bold active:scale-95 cursor-pointer ${
+        inList
+          ? "text-cyber-cyan border-cyber-cyan hover:bg-cyber-cyan/10"
+          : "text-white hover:border-cyber-cyan hover:text-cyber-cyan"
       } ${className}`}
     >
-      {loading ? (
+      {isToggling ? (
         <Loader2 className="w-5 h-5 animate-spin" />
       ) : inList ? (
-        <Check className="w-5 h-5" />
+        <Check className="w-5 h-5 transition-transform group-hover:scale-110" />
       ) : (
         <Plus className="w-5 h-5 group-hover:scale-110 transition-transform" />
       )}
