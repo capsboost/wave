@@ -78,3 +78,18 @@ export function useAnimeDetails(malId: string | number, initialData?: AniListAni
     retry: 1,
   });
 }
+
+/**
+ * Batch-fetch full details for multiple MAL IDs in ONE AniList request.
+ * Use this on list pages (profile watchlist, history, etc.) to avoid N parallel requests
+ * that would hammer the per-IP rate limit.
+ */
+export function useAnimeDetailsBatch(malIds: (string | number)[]) {
+  return useQuery({
+    queryKey: ["anime", "batch-details", malIds.map(String).sort().join(",")],
+    queryFn: () => anilistApi.getAnimeDetailsByIds(malIds),
+    staleTime: 24 * 60 * 60 * 1000, // 24 hours
+    enabled: malIds.length > 0,
+    retry: 1,
+  });
+}

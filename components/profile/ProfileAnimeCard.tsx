@@ -4,11 +4,22 @@ import Link from "next/link";
 import Image from "next/image";
 import { useAnimeDetails } from "@/hooks/useAnime";
 import { WatchlistButton } from "@/components/watchlist/WatchlistButton";
+import type { AniListAnime } from "@/lib/api/anilist";
 
-export function ProfileAnimeCard({ animeId, dateAdded }: { animeId: string, dateAdded: string }) {
-  const { data: anime, isLoading } = useAnimeDetails(animeId);
+interface ProfileAnimeCardProps {
+  animeId: string;
+  dateAdded: string;
+  /** Pre-fetched anime data from parent batch query. When provided, skips the per-card AniList fetch. */
+  anime?: AniListAnime;
+}
 
-  if (isLoading) {
+export function ProfileAnimeCard({ animeId, dateAdded, anime: prefetchedAnime }: ProfileAnimeCardProps) {
+  // Only fetch individually when no pre-fetched data is available (e.g. standalone usage).
+  // The profile page always passes pre-fetched data via useAnimeDetailsBatch.
+  const { data: fetchedAnime, isLoading } = useAnimeDetails(animeId, prefetchedAnime);
+  const anime = prefetchedAnime ?? fetchedAnime;
+
+  if (!prefetchedAnime && isLoading) {
     return <div className="aspect-3/4 bg-surface-container/50 animate-pulse clip-corner border border-outline-variant/30"></div>;
   }
 

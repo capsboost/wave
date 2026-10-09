@@ -116,38 +116,27 @@ async function fetchAniList<T>(query: string, variables: Record<string, string |
 
   const isClient = typeof window !== "undefined";
 
-  // In the browser: Call AniList GraphQL API directly (it supports CORS).
-  // This bypasses Vercel Serverless Functions completely, saving 90%+ of Function Invocations & Fluid CPU.
-  // Fall back to /api/anilist proxy only if browser-direct fetch fails (e.g. adblocker, network error).
-  const primaryUrl = isClient ? ANILIST_API_URL : ANILIST_API_URL;
-  const primaryHeaders = isClient
+  // IMPORTANT: In the browser we ALWAYS route through our /api/anilist proxy.
+  // Rationale: AniList's rate limit is per-IP. If we call graphql.anilist.co directly
+  // from users' browsers, every user has their own 90-req/min bucket. A profile page
+  // with 20 watchlist items fires 20 simultaneous requests and instantly 429s that user.
+  // Via the proxy our server IP is shared, Next.js fetch-caches responses (5-min TTL),
+  // and the same query from multiple users hits the cache instead of AniList.
+  const url = isClient ? "/api/anilist" : ANILIST_API_URL;
+  const headers = isClient
     ? { "Content-Type": "application/json", "Accept": "application/json" }
     : ANILIST_HEADERS;
 
   let response: Response;
   try {
-    response = await fetch(primaryUrl, {
+    response = await fetch(url, {
       method: "POST",
-      headers: primaryHeaders,
+      headers,
       body: JSON.stringify({ query, variables }),
     });
   } catch (err: unknown) {
-    if (isClient) {
-      // Direct browser fetch failed; attempt proxy fallback
-      try {
-        response = await fetch("/api/anilist", {
-          method: "POST",
-          headers: { "Content-Type": "application/json", "Accept": "application/json" },
-          body: JSON.stringify({ query, variables }),
-        });
-      } catch {
-        tripAniListCircuit(err instanceof Error ? err.message : "Network error");
-        throw err;
-      }
-    } else {
-      tripAniListCircuit(err instanceof Error ? err.message : "Network error");
-      throw err;
-    }
+    tripAniListCircuit(err instanceof Error ? err.message : "Network error");
+    throw err;
   }
 
   if (!response.ok) {
@@ -155,11 +144,10 @@ async function fetchAniList<T>(query: string, variables: Record<string, string |
       const retryAfterHeader = response.headers.get("Retry-After");
       const delayMs = retryAfterHeader ? Math.max(1000, Number(retryAfterHeader) * 1000) : 2000;
       await new Promise((res) => setTimeout(res, Math.min(delayMs, 5000)));
-      const retryUrl = isClient ? "/api/anilist" : ANILIST_API_URL;
-      const retryHeaders = isClient ? { "Content-Type": "application/json", "Accept": "application/json" } : ANILIST_HEADERS;
-      const retry = await fetch(retryUrl, {
+      // On 429, both client and server retry through the proxy
+      const retry = await fetch(isClient ? "/api/anilist" : ANILIST_API_URL, {
         method: "POST",
-        headers: retryHeaders,
+        headers,
         body: JSON.stringify({ query, variables }),
       });
       if (!retry.ok) {
@@ -802,5 +790,42 @@ export const anilistApi = {
       }
     }
     return jikanApi.getAnimeTitlesByIds(malIds);
+  },
+
+  // Batch-fetch full AniListAnime details for multiple MAL IDs in a single request.
+  // Use this instead of calling getAnimeDetails() per item (N+1 problem).
+  getAnimeDetailsByIds: async (malIds: (string | number)[]): Promise<AniListAnime[]> => {
+    if (!malIds || malIds.length === 0) return [];
+
+    const numericIds = malIds.map(Number).filter(n => !isNaN(n) && n > 0);
+    if (numericIds.length === 0) return [];
+
+    if (!isAniListCircuitOpen()) {
+      try {
+        const query = `
+          query($idMal_in: [Int]) {
+            Page(page: 1, perPage: 50) {
+              media(idMal_in: $idMal_in, type: ANIME, isAdult: false, genre_not_in: ["Hentai"]) {
+                ${MEDIA_FIELDS}
+              }
+            }
+          }
+        `;
+        const data = await fetchAniList<{ Page: { media: AniListAnime[] } }>(query, { idMal_in: numericIds });
+        if (data?.Page?.media) {
+          return data.Page.media.filter(isSafeAnime);
+        }
+      } catch (e) {
+        console.warn("[AniList getAnimeDetailsByIds] Batch fetch failed, falling back per-item:", e);
+      }
+    }
+
+    // Fallback: fetch individually (each goes through proxy + TanStack cache)
+    const results = await Promise.allSettled(
+      numericIds.map(id => jikanApi.getAnimeDetails(id).catch(() => null))
+    );
+    return results
+      .map(r => (r.status === "fulfilled" ? r.value : null))
+      .filter((a): a is AniListAnime => a !== null && isSafeAnime(a));
   },
 };

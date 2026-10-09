@@ -12,6 +12,8 @@ import { ProfileAnimeCard } from "@/components/profile/ProfileAnimeCard";
 import { useWatchStore } from "@/store/useWatchStore";
 import { ConfirmModal } from "@/components/ui/ConfirmModal";
 import { useWatchlist } from "@/hooks/useWatchlist";
+import { useAnimeDetailsBatch } from "@/hooks/useAnime";
+import type { AniListAnime } from "@/lib/api/anilist";
 
 export default function ProfileClient() {
   const { data: session, isPending } = useSession();
@@ -56,6 +58,15 @@ export default function ProfileClient() {
 
   // Data State via centralized, cached hook
   const { items: watchlist, isLoading: loadingData } = useWatchlist();
+
+  // Batch-fetch all watchlist anime details in ONE AniList request instead of N per-card fetches.
+  // This prevents the watchlist page from firing N concurrent requests to AniList,
+  // which would instantly exhaust the per-IP rate limit for users with long watchlists.
+  const watchlistIds = watchlist.map(item => item.animeId);
+  const { data: batchAnime, isLoading: loadingBatch } = useAnimeDetailsBatch(watchlistIds);
+  const animeMap = new Map<string, AniListAnime>(
+    (batchAnime ?? []).map(a => [String(a.idMal), a])
+  );
 
   useEffect(() => {
     if (!isPending && !session) {
@@ -139,12 +150,17 @@ export default function ProfileClient() {
             {activeTab === 'watchlist' && (
               <div className="animate-in fade-in duration-300">
                 <h3 className="font-headline-lg text-2xl text-white mb-6 uppercase">My Watchlist</h3>
-                {loadingData ? <div className="py-12 flex justify-center"><Grid size="40" speed="1" color="#FF003C" /></div> : watchlist.length === 0 ? (
+                {(loadingData || loadingBatch) ? <div className="py-12 flex justify-center"><Grid size="40" speed="1" color="#FF003C" /></div> : watchlist.length === 0 ? (
                   <p className="text-on-surface-variant font-label-caps">Watchlist is empty.</p>
                 ) : (
                   <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
                     {watchlist.map(item => (
-                      <ProfileAnimeCard key={item.id} animeId={item.animeId} dateAdded={item.createdAt} />
+                      <ProfileAnimeCard
+                        key={item.id}
+                        animeId={item.animeId}
+                        dateAdded={item.createdAt}
+                        anime={animeMap.get(item.animeId)}
+                      />
                     ))}
                   </div>
                 )}
