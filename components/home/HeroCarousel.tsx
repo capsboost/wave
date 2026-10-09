@@ -128,20 +128,27 @@ export function HeroCarousel({ animeList }: HeroCarouselProps) {
                 <p 
                   className={`font-body-lg text-body-lg text-on-surface-variant max-w-2xl mb-stack-lg drop-shadow-md line-clamp-3 transition-all duration-700 transform ${isActive ? "translate-y-0 opacity-100" : "translate-y-4 opacity-0"}`}
                   style={{ transitionDelay: '400ms' }}
-                  dangerouslySetInnerHTML={{ __html: anime.description }} 
-                />
+                >
+                  {anime.description
+                    .replace(/<[^>]*>/g, ' ')
+                    .replace(/\s+/g, ' ')
+                    .replace(/(\(|<i>)?Source:.*$/i, '')
+                    .trim()}
+                </p>
               )}
               
               <div 
                 className={`flex flex-wrap gap-stack-md transition-all duration-700 transform ${isActive ? "translate-y-0 opacity-100" : "translate-y-4 opacity-0"}`}
                 style={{ transitionDelay: '500ms' }}
               >
-                <Link href={`/anime/${anime.idMal}`}>
-                  <Button className="flex items-center justify-center gap-2 bg-neon-crimson text-void-black font-label-caps font-bold uppercase tracking-widest px-8 py-6 clip-corner hover:bg-white hover:drop-shadow-[0_0_15px_rgba(255,0,60,0.6)] transition-all duration-300 scale-105 active:scale-95 group border-none cursor-pointer">
-                    <Play className="w-5 h-5 mr-1 fill-void-black group-hover:scale-110 transition-transform" />
-                    WATCH NOW
-                  </Button>
-                </Link>
+                {anime.idMal && (
+                  <Link href={`/anime/${anime.idMal}`}>
+                    <Button className="flex items-center justify-center gap-2 bg-neon-crimson text-void-black font-label-caps font-bold uppercase tracking-widest px-8 py-6 clip-corner hover:bg-white hover:drop-shadow-[0_0_15px_rgba(255,0,60,0.6)] transition-all duration-300 scale-105 active:scale-95 group border-none cursor-pointer">
+                      <Play className="w-5 h-5 mr-1 fill-void-black group-hover:scale-110 transition-transform" />
+                      WATCH NOW
+                    </Button>
+                  </Link>
+                )}
               </div>
 
             </div>
