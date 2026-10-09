@@ -67,7 +67,7 @@ function getApplicableWatchEpisodes(
   return finalNum;
 }
 
-function useEpisodeCounts(id: string) {
+function useEpisodeCounts(id: string, malId?: number | null, aniId?: number | null) {
   const [counts, setCounts] = useState<{ is_sub: number | null; is_dub: number | null } | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -75,7 +75,12 @@ function useEpisodeCounts(id: string) {
     let isMounted = true;
     async function fetchCounts() {
       try {
-        const res = await fetch(`/api/episodes/${id}`);
+        const queryParams = new URLSearchParams();
+        if (malId) queryParams.set('malId', String(malId));
+        if (aniId) queryParams.set('aniId', String(aniId));
+        const qs = queryParams.toString();
+        const url = `/api/episodes/${id}${qs ? `?${qs}` : ''}`;
+        const res = await fetch(url);
         if (res.ok) {
           const data = await res.json();
           if (isMounted) {
@@ -94,24 +99,34 @@ function useEpisodeCounts(id: string) {
     }
     fetchCounts();
     return () => { isMounted = false; };
-  }, [id]);
+  // Re-fetch when anime IDs resolve (they arrive after initial render via useAnimeDetails)
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [id, malId, aniId]);
 
   return { counts, isLoading };
 }
 
 function usePlayerEvents(
   id: string,
+  episode: string,
   provider: "ani" | "mal",
   autoNext: boolean,
   setStreamFailed: (v: boolean) => void,
   updateProgress: (id: string, time: number, duration: number) => void
 ) {
   const hasTriggeredRef = useRef(false);
+  // Timestamp of the last megaplay-complete dispatch — prevents rapid-fire cascade
+  // from the preserved iframe emitting trailing events on the new episode.
+  const lastTriggerTimeRef = useRef(0);
+  const TRIGGER_COOLDOWN_MS = 4000;
 
-  // Reset completion trigger on anime/id change
+  // Reset completion trigger on BOTH anime id AND episode changes.
+  // Critical: the iframe is keyed only on provider+language (no episode) to preserve
+  // fullscreen, so the same iframe element lives on across episode navigation.
+  // Without resetting here, the old episode's trailing 'ended' fires on the new episode.
   useEffect(() => {
     hasTriggeredRef.current = false;
-  }, [id]);
+  }, [id, episode]);
 
   useEffect(() => {
     function handleMessage(event: MessageEvent) {
@@ -137,9 +152,19 @@ function usePlayerEvents(
         if (duration > 0 && time > 0) {
           updateProgress(id, time, duration);
 
-          // Failsafe auto-trigger if video reaches the final seconds and has not yet triggered complete
-          if (autoNext && !hasTriggeredRef.current && duration > 20 && time >= duration - 1.5) {
+          // Failsafe auto-trigger: video is within the final 1.5 s and hasn't triggered yet.
+          // Also enforce a cooldown so residual events from a preserved iframe can't
+          // immediately re-trigger on the next episode.
+          const now = Date.now();
+          if (
+            autoNext &&
+            !hasTriggeredRef.current &&
+            now - lastTriggerTimeRef.current > TRIGGER_COOLDOWN_MS &&
+            duration > 20 &&
+            time >= duration - 1.5
+          ) {
             hasTriggeredRef.current = true;
+            lastTriggerTimeRef.current = now;
             window.dispatchEvent(new CustomEvent('megaplay-complete'));
           }
         }
@@ -147,8 +172,14 @@ function usePlayerEvents(
         window.dispatchEvent(new CustomEvent('wave-sync-progress'));
       } else if (data.event === "complete" || data.event === "ended") {
         window.dispatchEvent(new CustomEvent('wave-sync-progress'));
-        if (autoNext && !hasTriggeredRef.current) {
+        const now = Date.now();
+        if (
+          autoNext &&
+          !hasTriggeredRef.current &&
+          now - lastTriggerTimeRef.current > TRIGGER_COOLDOWN_MS
+        ) {
           hasTriggeredRef.current = true;
+          lastTriggerTimeRef.current = now;
           window.dispatchEvent(new CustomEvent('megaplay-complete'));
         }
       }
@@ -159,7 +190,7 @@ function usePlayerEvents(
       window.removeEventListener("message", handleMessage);
       window.dispatchEvent(new CustomEvent('wave-sync-progress'));
     };
-  }, [provider, id, updateProgress, autoNext, setStreamFailed]);
+  }, [provider, id, episode, updateProgress, autoNext, setStreamFailed]);
 }
 
 function useAutoNextEpisode(
@@ -213,7 +244,9 @@ export default function WatchClient({ id, episode, initialAnime }: WatchClientPr
   const initLang = searchParams.get("lang") === "dub" ? "dub" : "sub";
 
   const { data: anime, isLoading: isAnimeLoading } = useAnimeDetails(id, initialAnime);
-  const { counts, isLoading: isCountsLoading } = useEpisodeCounts(id);
+  // Pass both MAL ID and AniList ID so the API can find the Anikoto row regardless of
+  // which ID variant was used when syncing the database.
+  const { counts, isLoading: isCountsLoading } = useEpisodeCounts(id, anime?.idMal, anime?.id);
   const addToHistory = useWatchStore((state) => state.addToHistory);
   const updateProgress = useWatchStore((state) => state.updateProgress);
 
@@ -253,7 +286,7 @@ export default function WatchClient({ id, episode, initialAnime }: WatchClientPr
     }
   }, [anime, baseEpisodes, episode, id, addToHistory, effectiveLanguage]);
 
-  usePlayerEvents(id, provider, autoNext, setStreamFailed, updateProgress);
+  usePlayerEvents(id, episode, provider, autoNext, setStreamFailed, updateProgress);
   useAutoNextEpisode(id, episode, maxAvailableEpisodes, effectiveLanguage, counts);
 
   if ((isAnimeLoading && !anime) || (!anime && isCountsLoading)) {

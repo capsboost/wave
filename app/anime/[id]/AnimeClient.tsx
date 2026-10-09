@@ -120,7 +120,11 @@ export default function AnimeClient({ id, initialAnime }: AnimeClientProps) {
     const controller = new AbortController();
     async function fetchCounts() {
       try {
-        const res = await fetch(`/api/episodes/${id}`, { signal: controller.signal });
+        const queryParams = new URLSearchParams();
+        if (anime?.idMal) queryParams.set("malId", String(anime.idMal));
+        if (anime?.id) queryParams.set("aniId", String(anime.id));
+        const url = `/api/episodes/${id}${queryParams.toString() ? `?${queryParams.toString()}` : ''}`;
+        const res = await fetch(url, { signal: controller.signal });
         if (res.ok) {
           const data = await res.json();
           if (data && (typeof data.is_sub === 'number' || typeof data.is_dub === 'number' || data.is_sub !== undefined)) {
