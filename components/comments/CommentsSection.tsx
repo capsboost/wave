@@ -88,7 +88,7 @@ export function CommentsSection({ animeId, episodeNumber }: CommentsSectionProps
             value={newComment}
             onChange={(e) => setNewComment(e.target.value)}
             placeholder={session ? "Add a comment..." : "Log in to comment..."}
-            className="w-full bg-surface-container border border-outline-variant/50 focus:border-neon-crimson outline-none text-white px-4 py-4 font-body-md clip-corner pr-12 transition-colors"
+            className="w-full bg-surface-container border border-outline-variant/50 outline-none text-white px-4 py-4 font-body-md clip-corner pr-12 transition-colors"
           />
           <button 
             type="submit"

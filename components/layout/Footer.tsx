@@ -5,7 +5,7 @@ export function Footer() {
   return (
     <footer className="bg-void-black py-stack-lg border-t border-outline-variant mt-auto z-10 relative">
       <div className="flex flex-col md:flex-row justify-between items-center px-margin-mobile md:px-margin-desktop gap-stack-md">
-        <Link href="/" className="flex items-center group whitespace-nowrap focus:outline-none" aria-label="Wave Anime Home">
+        <Link href="/" className="flex items-center group whitespace-nowrap" aria-label="Wave Anime Home">
           <WaveLogo variant="full" size="md" />
         </Link>
         <div className="flex flex-wrap justify-center gap-stack-md font-label-md text-label-md uppercase">

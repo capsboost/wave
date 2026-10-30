@@ -72,7 +72,7 @@ export function Navbar() {
         <div className="flex min-w-0 flex-1 items-center gap-3 lg:gap-gutter">
           <Link
             href="/"
-            className="flex shrink-0 items-center group whitespace-nowrap focus:outline-none"
+            className="flex shrink-0 items-center group whitespace-nowrap"
             aria-label="Wave Anime Home"
           >
             <WaveLogo variant="full" size="md" />
@@ -130,7 +130,7 @@ export function Navbar() {
           <div ref={wrapperRef} className="relative hidden xl:block">
             <form 
               onSubmit={handleSearch}
-              className="flex items-center relative border-b border-outline-variant focus-within:border-neon-crimson transition-colors bg-surface-glass w-28 lg:w-40 xl:w-64"
+              className="flex items-center relative border-b border-outline-variant transition-colors bg-surface-glass w-28 lg:w-40 xl:w-64"
             >
               <Search className="w-4 h-4 text-on-surface-variant ml-2" />
               <input
@@ -140,7 +140,7 @@ export function Navbar() {
                 onChange={(e) => setQuery(e.target.value)}
                 onFocus={() => setIsFocused(true)}
                 placeholder="Search anime..."
-                className="bg-transparent !outline-none border-none focus:ring-0 focus-visible:!outline-none text-on-surface font-label-caps text-label-caps w-full py-2 px-2 placeholder:text-on-surface-variant"
+                className="bg-transparent !outline-none border-none text-on-surface font-label-caps text-label-caps w-full py-2 px-2 placeholder:text-on-surface-variant"
               />
             </form>
             
@@ -411,7 +411,7 @@ export function Navbar() {
         <div id="mobile-search-panel" className="xl:hidden absolute top-full left-0 w-full bg-surface-container/95 backdrop-blur-xl border-b border-outline-variant/30 p-4 shadow-[0_10px_30px_rgba(0,0,0,0.8)] z-40">
           <form 
             onSubmit={handleSearch}
-            className="flex items-center relative border border-outline-variant focus-within:border-neon-crimson transition-colors bg-surface-glass w-full mb-2"
+            className="flex items-center relative border border-outline-variant transition-colors bg-surface-glass w-full mb-2"
           >
             <Search className="w-4 h-4 text-on-surface-variant ml-3" />
             <input
@@ -420,7 +420,7 @@ export function Navbar() {
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               placeholder="Search anime..."
-              className="bg-transparent !outline-none border-none focus:ring-0 focus-visible:!outline-none text-on-surface font-label-caps text-label-caps w-full py-3 px-3 placeholder:text-on-surface-variant"
+              className="bg-transparent !outline-none border-none text-on-surface font-label-caps text-label-caps w-full py-3 px-3 placeholder:text-on-surface-variant"
               autoFocus
             />
           </form>
