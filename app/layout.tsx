@@ -6,6 +6,7 @@ import { QueryProvider } from "@/components/providers/QueryProvider";
 import { AuthModal } from "@/components/auth/AuthModal";
 import { AnalyticsTracker } from "@/components/layout/AnalyticsTracker";
 import { ProgressSyncProvider } from "@/components/providers/ProgressSyncProvider";
+import { AnimeNavigationLoader } from "@/components/layout/AnimeNavigationLoader";
 import "./globals.css";
 
 const spaceGrotesk = Space_Grotesk({
@@ -146,6 +147,7 @@ export default function RootLayout({
           <AuthModal />
           <AnalyticsTracker />
           <ProgressSyncProvider />
+          <AnimeNavigationLoader />
           <main className="flex-1">{children}</main>
           <Footer />
         </QueryProvider>
@@ -153,4 +155,3 @@ export default function RootLayout({
     </html>
   );
 }
-
