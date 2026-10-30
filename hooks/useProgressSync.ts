@@ -16,9 +16,10 @@ const SYNC_INTERVAL_MS = 30_000; // 30 seconds
  */
 export function useProgressSync() {
   const { data: session } = useSession();
-  const isAuthenticated = !!session?.user;
+  const userId = session?.user?.id;
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
-  const hasFetchedRef = useRef(false);
+  const syncInFlightRef = useRef<Promise<void> | null>(null);
+  const lastFetchedUserIdRef = useRef<string | null>(null);
 
   const getDirtyEntries = useWatchStore((s) => s.getDirtyEntries);
   const markSynced = useWatchStore((s) => s.markSynced);
@@ -26,74 +27,87 @@ export function useProgressSync() {
 
   // Push dirty entries to server
   const syncToServer = useCallback(async () => {
-    if (!isAuthenticated) return;
+    if (!userId || syncInFlightRef.current) return;
 
     const dirtyEntries = getDirtyEntries();
     if (dirtyEntries.length === 0) return;
 
-    // Batch: send each dirty entry to the API
-    const promises = dirtyEntries.map(async (entry) => {
-      try {
-        const res = await fetch("/api/progress", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            animeId: String(entry.mal_id),
-            episodeNumber: Number(entry.episode),
-            progressSeconds: entry.time || 0,
-            durationSeconds: entry.duration || 0,
-            title: entry.title || "",
-            imageUrl: entry.image_url || "",
-            language: entry.language || "sub",
-          }),
-        });
+    const sync = (async () => {
+      const promises = dirtyEntries.map(async (entry) => {
+        try {
+          const res = await fetch("/api/progress", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              animeId: String(entry.mal_id),
+              episodeNumber: Number(entry.episode),
+              progressSeconds: entry.time || 0,
+              durationSeconds: entry.duration || 0,
+              title: entry.title || "",
+              imageUrl: entry.image_url || "",
+              language: entry.language || "sub",
+            }),
+          });
 
-        if (res.ok) {
-          markSynced(entry.mal_id);
+          if (res.ok) {
+            markSynced(entry);
+          }
+        } catch (err) {
+          console.warn("Failed to sync progress for", entry.mal_id, err);
         }
-      } catch (err) {
-        console.warn("Failed to sync progress for", entry.mal_id, err);
-      }
-    });
+      });
 
-    await Promise.allSettled(promises);
-  }, [isAuthenticated, getDirtyEntries, markSynced]);
+      await Promise.allSettled(promises);
+    })();
+
+    syncInFlightRef.current = sync;
+    try {
+      await sync;
+    } finally {
+      if (syncInFlightRef.current === sync) {
+        syncInFlightRef.current = null;
+      }
+    }
+  }, [userId, getDirtyEntries, markSynced]);
 
   // Fetch server state and merge
-  const fetchAndMerge = useCallback(async () => {
-    if (!isAuthenticated) return;
+  const fetchAndMerge = useCallback(async (): Promise<boolean> => {
+    if (!userId) return false;
 
     try {
-      const res = await fetch("/api/progress");
-      if (!res.ok) return;
+      const res = await fetch("/api/progress", { cache: "no-store" });
+      if (!res.ok) return false;
 
       const data = await res.json();
       const items: ServerWatchItem[] = data.items || [];
       mergeFromServer(items);
+      return true;
     } catch (err) {
       console.warn("Failed to fetch server progress:", err);
+      return false;
     }
-  }, [isAuthenticated, mergeFromServer]);
+  }, [userId, mergeFromServer]);
 
-  // On mount / login: fetch server state, merge, and immediately sync local offline progress to cloud
+  // Merge cloud progress before pushing local changes for each signed-in account.
   useEffect(() => {
-    if (!isAuthenticated) {
-      hasFetchedRef.current = false;
+    if (!userId) {
+      lastFetchedUserIdRef.current = null;
       return;
     }
 
-    if (!hasFetchedRef.current) {
-      hasFetchedRef.current = true;
-      fetchAndMerge().then(() => {
-        // Immediately sync any local entries that were watched offline or are ahead
-        syncToServer();
-      });
-    }
-  }, [isAuthenticated, fetchAndMerge, syncToServer]);
+    if (lastFetchedUserIdRef.current === userId) return;
+    lastFetchedUserIdRef.current = userId;
 
-  // Background push sync: ONLY runs if dirty entries exist (no network call if empty)
+    void fetchAndMerge().then((merged) => {
+      if (merged && lastFetchedUserIdRef.current === userId) {
+        void syncToServer();
+      }
+    });
+  }, [userId, fetchAndMerge, syncToServer]);
+
+  // Push local changes every 30 seconds and pull changes from other devices every minute.
   useEffect(() => {
-    if (!isAuthenticated) {
+    if (!userId) {
       if (intervalRef.current) {
         clearInterval(intervalRef.current);
         intervalRef.current = null;
@@ -101,8 +115,16 @@ export function useProgressSync() {
       return;
     }
 
+    let tick = 0;
     intervalRef.current = setInterval(() => {
-      syncToServer(); // pushes only if dirty entries exist
+      tick += 1;
+      if (tick % 2 === 0) {
+        void fetchAndMerge().then((merged) => {
+          if (merged) void syncToServer();
+        });
+      } else {
+        void syncToServer();
+      }
     }, SYNC_INTERVAL_MS);
 
     return () => {
@@ -111,20 +133,33 @@ export function useProgressSync() {
         intervalRef.current = null;
       }
     };
-  }, [isAuthenticated, syncToServer]);
+  }, [userId, syncToServer, fetchAndMerge]);
 
-  // Event-driven sync on pause/leave, visibilitychange, pagehide, and unload
+  // Refresh from the server when a user returns to this tab or browser.
   useEffect(() => {
-    if (!isAuthenticated) return;
+    if (!userId) return;
 
-    const handleCustomSync = () => {
-      syncToServer();
+    const refreshProgress = () => {
+      if (document.visibilityState === "hidden") return;
+      void fetchAndMerge().then((merged) => {
+        if (merged) void syncToServer();
+      });
     };
 
-    const handleVisibility = () => {
-      if (document.visibilityState === "hidden") {
-        syncToServer();
-      }
+    window.addEventListener("focus", refreshProgress);
+    document.addEventListener("visibilitychange", refreshProgress);
+    return () => {
+      window.removeEventListener("focus", refreshProgress);
+      document.removeEventListener("visibilitychange", refreshProgress);
+    };
+  }, [userId, fetchAndMerge, syncToServer]);
+
+  // Flush local progress during navigation and page shutdown.
+  useEffect(() => {
+    if (!userId) return;
+
+    const handleCustomSync = () => {
+      void syncToServer();
     };
 
     const handleUnload = () => {
@@ -144,15 +179,10 @@ export function useProgressSync() {
     };
 
     window.addEventListener("wave-sync-progress", handleCustomSync);
-    document.addEventListener("visibilitychange", handleVisibility);
     window.addEventListener("pagehide", handleUnload);
-    window.addEventListener("beforeunload", handleUnload);
-
     return () => {
       window.removeEventListener("wave-sync-progress", handleCustomSync);
-      document.removeEventListener("visibilitychange", handleVisibility);
       window.removeEventListener("pagehide", handleUnload);
-      window.removeEventListener("beforeunload", handleUnload);
     };
-  }, [isAuthenticated, syncToServer, getDirtyEntries]);
+  }, [userId, syncToServer, getDirtyEntries]);
 }

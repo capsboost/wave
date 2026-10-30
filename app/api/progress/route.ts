@@ -59,6 +59,13 @@ export async function POST(req: Request) {
           language: sql`excluded.language`,
           updatedAt: sql`excluded.updated_at`,
         },
+        setWhere: sql`
+          excluded.episode_number > ${watchHistory.episodeNumber}
+          OR (
+            excluded.episode_number = ${watchHistory.episodeNumber}
+            AND excluded.progress_seconds >= ${watchHistory.progressSeconds}
+          )
+        `,
       });
 
     return NextResponse.json({ ok: true });

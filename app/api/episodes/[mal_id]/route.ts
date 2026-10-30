@@ -67,10 +67,8 @@ export async function GET(
       {
         is_sub: null,
         is_dub: null,
-        error: "Not found in Anikoto database",
       },
       {
-        status: 404,
         headers: {
           "Cache-Control": "public, s-maxage=3600, stale-while-revalidate=7200",
         },

@@ -6,8 +6,7 @@ import { useState, useEffect, useMemo, useRef } from "react";
 import { Play, Star, MessageSquare, Mic } from "lucide-react";
 import { useAnimeDetails } from "@/hooks/useAnime";
 import { type AniListAnime, isSafeAnime } from "@/lib/api/anilist";
-import { Grid } from 'ldrs/react';
-import 'ldrs/react/Grid.css';
+import { RouteLoading } from "@/components/ui/RouteLoading";
 import { WatchlistButton } from "@/components/watchlist/WatchlistButton";
 import { useWatchStore, getAnimeResumeInfo } from "@/store/useWatchStore";
 import { useMounted } from "@/hooks/useMounted";
@@ -55,11 +54,10 @@ function getCleanDescription(description?: string | null): string {
 
 interface AnimeClientProps {
   readonly id: string;
-  readonly initialAnime?: AniListAnime;
 }
 
-export default function AnimeClient({ id, initialAnime }: AnimeClientProps) {
-  const { data: anime, isLoading: isAnimeLoading } = useAnimeDetails(id, initialAnime);
+export default function AnimeClient({ id }: AnimeClientProps) {
+  const { data: anime, isLoading: isAnimeLoading } = useAnimeDetails(id);
   const [episodeChunk, setEpisodeChunk] = useState(0);
   const [language, setLanguage] = useState<"sub" | "dub">("sub");
   const [counts, setCounts] = useState<{ is_sub: number | null, is_dub: number | null } | null>(null);
@@ -171,11 +169,7 @@ export default function AnimeClient({ id, initialAnime }: AnimeClientProps) {
   );
 
   if (isAnimeLoading && !anime) {
-    return (
-      <div className="flex-1 flex items-center justify-center min-h-screen bg-void-black">
-        <Grid size="60" speed="1" color="#FF003C" />
-      </div>
-    );
+    return <RouteLoading message="Loading anime details..." />;
   }
 
   if (!anime || !isSafeAnime(anime)) {

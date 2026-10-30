@@ -1,10 +1,10 @@
 import type { Metadata } from "next";
 import { cache } from "react";
-import { anilistApi, type AniListAnime } from "@/lib/api/anilist";
+import { anilistApi } from "@/lib/api/anilist";
 import { cacheAnimeMetadataIfMissing } from "@/lib/api/cacheMetadata";
 import AnimeClient from "./AnimeClient";
 
-export const revalidate = 3600; // Cache for 1 hour
+export const revalidate = 3600;
 
 const getAnimeDetails = cache((id: string) => anilistApi.getAnimeDetails(id));
 
@@ -18,13 +18,14 @@ export async function generateMetadata({
     const anime = await getAnimeDetails(id);
     if (!anime) return { title: "Anime Not Found" };
 
+    void cacheAnimeMetadataIfMissing(anime);
+
     const title = anime.title.english || anime.title.romaji || "Anime";
     const cleanDesc = (anime.description || "")
       .replace(/<[^>]*>/g, "")
       .replace(/(\(|<i>)?Source:.*$/i, "")
       .trim()
       .slice(0, 160);
-
     const year = anime.seasonYear ? ` (${anime.seasonYear})` : "";
     const genres = anime.genres?.slice(0, 3).join(", ") || "Anime";
     const cover = anime.bannerImage || anime.coverImage?.extraLarge || anime.coverImage?.large || "";
@@ -66,55 +67,5 @@ export default async function Page({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-
-  let schemaData: Record<string, unknown> | null = null;
-  let anime: AniListAnime | null = null;
-  try {
-    anime = await getAnimeDetails(id);
-    if (anime) {
-      // Dynamically cache new anime metadata to Neon DB for Tier 3/4 fallback (0 writes if already cached)
-      cacheAnimeMetadataIfMissing(anime).catch(() => {});
-
-      const title = anime.title.english || anime.title.romaji || "Anime";
-      const cleanDesc = (anime.description || "")
-        .replace(/<[^>]*>/g, "")
-        .replace(/(\(|<i>)?Source:.*$/i, "")
-        .trim()
-        .slice(0, 200);
-
-      schemaData = {
-        "@context": "https://schema.org",
-        "@type": anime.format === "MOVIE" ? "Movie" : "TVSeries",
-        name: title,
-        alternateName: [anime.title.romaji, anime.title.english].filter(Boolean),
-        image: anime.coverImage?.extraLarge || anime.bannerImage || undefined,
-        description: cleanDesc,
-        genre: anime.genres,
-        datePublished: anime.startDate?.year ? `${anime.startDate.year}` : undefined,
-        numberOfEpisodes: anime.episodes || undefined,
-        aggregateRating: anime.averageScore
-          ? {
-              "@type": "AggregateRating",
-              ratingValue: (anime.averageScore / 10).toFixed(1),
-              bestRating: "10",
-              reviewCount: "1000+",
-            }
-          : undefined,
-      };
-    }
-  } catch {
-    // Graceful fallback if AniList details fetch fails on server
-  }
-
-  return (
-    <>
-      {schemaData && (
-        <script
-          type="application/ld+json"
-          dangerouslySetInnerHTML={{ __html: JSON.stringify(schemaData) }}
-        />
-      )}
-      <AnimeClient id={id} initialAnime={anime || undefined} />
-    </>
-  );
+  return <AnimeClient id={id} />;
 }

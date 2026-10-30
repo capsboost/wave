@@ -1,11 +1,11 @@
 import type { Metadata } from "next";
 import { Suspense } from "react";
 import { cache } from "react";
-import { anilistApi, type AniListAnime } from "@/lib/api/anilist";
+import { anilistApi } from "@/lib/api/anilist";
 import { cacheAnimeMetadataIfMissing } from "@/lib/api/cacheMetadata";
 import WatchClient from "./WatchClient";
 
-export const revalidate = 3600; // Cache for 1 hour
+export const revalidate = 3600;
 
 const getAnimeDetails = cache((id: string) => anilistApi.getAnimeDetails(id));
 
@@ -17,9 +17,17 @@ export async function generateMetadata({
   const { id, episode } = await params;
   try {
     const anime = await getAnimeDetails(id);
-    const title = anime?.title?.english || anime?.title?.romaji || "Anime";
-    const year = anime?.seasonYear ? ` (${anime.seasonYear})` : "";
-    const cover = anime?.bannerImage || anime?.coverImage?.extraLarge || anime?.coverImage?.large || "";
+    if (!anime) {
+      return {
+        title: `Watch Anime Episode ${episode} | Wave Anime`,
+      };
+    }
+
+    void cacheAnimeMetadataIfMissing(anime);
+
+    const title = anime.title?.english || anime.title?.romaji || "Anime";
+    const year = anime.seasonYear ? ` (${anime.seasonYear})` : "";
+    const cover = anime.bannerImage || anime.coverImage?.extraLarge || anime.coverImage?.large || "";
 
     return {
       title: `Watch ${title} Episode ${episode} English Sub & Dub HD Online Free`,
@@ -56,43 +64,9 @@ export default async function Page({
 }) {
   const { id, episode } = await params;
 
-  let episodeSchema: Record<string, unknown> | null = null;
-  let anime: AniListAnime | null = null;
-  try {
-    anime = await getAnimeDetails(id);
-    if (anime) {
-      // Dynamically cache new anime metadata to Neon DB for Tier 3/4 fallback (0 writes if already cached)
-      cacheAnimeMetadataIfMissing(anime).catch(() => {});
-
-      const title = anime.title.english || anime.title.romaji || "Anime";
-      episodeSchema = {
-        "@context": "https://schema.org",
-        "@type": "TVEpisode",
-        name: `${title} Episode ${episode}`,
-        episodeNumber: Number(episode) || episode,
-        partOfSeries: {
-          "@type": "TVSeries",
-          name: title,
-        },
-        image: anime.coverImage?.extraLarge || anime.bannerImage || undefined,
-        description: `Watch ${title} Episode ${episode} in high definition with English Sub & Dub on Wave Anime.`,
-      };
-    }
-  } catch {
-    // Graceful fallback
-  }
-
   return (
-    <>
-      {episodeSchema && (
-        <script
-          type="application/ld+json"
-          dangerouslySetInnerHTML={{ __html: JSON.stringify(episodeSchema) }}
-        />
-      )}
-      <Suspense fallback={<div className="min-h-screen bg-void-black flex items-center justify-center text-neon-crimson font-mono text-sm tracking-widest uppercase">INITIALIZING FEED...</div>}>
-        <WatchClient id={id} episode={episode} initialAnime={anime || undefined} />
-      </Suspense>
-    </>
+    <Suspense fallback={<div className="min-h-screen bg-void-black flex items-center justify-center text-neon-crimson font-mono text-sm tracking-widest uppercase">INITIALIZING FEED...</div>}>
+      <WatchClient id={id} episode={episode} />
+    </Suspense>
   );
 }

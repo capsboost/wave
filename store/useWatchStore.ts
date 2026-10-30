@@ -122,7 +122,7 @@ interface WatchStoreState {
   removeFromHistory: (mal_id: string | number) => void;
   clearHistory: () => void;
   markDirty: (mal_id: string | number) => void;
-  markSynced: (mal_id: string | number) => void;
+  markSynced: (item: WatchHistoryItem) => void;
   getDirtyEntries: () => WatchHistoryItem[];
   mergeFromServer: (serverItems: ServerWatchItem[]) => void;
 }
@@ -197,15 +197,24 @@ export const useWatchStore = create<WatchStoreState>()(
           };
         }),
 
-      markSynced: (mal_id) =>
+      markSynced: (syncedItem) =>
         set((state) => {
-          const key = String(mal_id);
-          if (!state.history[key]) return state;
+          const key = String(syncedItem.mal_id);
+          const currentItem = state.history[key];
+          if (
+            !currentItem ||
+            String(currentItem.episode) !== String(syncedItem.episode) ||
+            currentItem.time !== syncedItem.time ||
+            currentItem.duration !== syncedItem.duration ||
+            currentItem.timestamp !== syncedItem.timestamp
+          ) {
+            return state;
+          }
           return {
             history: {
               ...state.history,
               [key]: {
-                ...state.history[key],
+                ...currentItem,
                 dirty: false,
                 lastSyncedAt: Date.now(),
               },

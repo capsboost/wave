@@ -6,8 +6,7 @@ import { useEffect, useState, useRef } from "react";
 import { ArrowLeft, MessageSquare, Mic, FastForward } from "lucide-react";
 import { useAnimeDetails } from "@/hooks/useAnime";
 import { type AniListAnime, isSafeAnime } from "@/lib/api/anilist";
-import { Grid } from 'ldrs/react';
-import 'ldrs/react/Grid.css';
+import { RouteLoading } from "@/components/ui/RouteLoading";
 import { useWatchStore } from "@/store/useWatchStore";
 import { WatchlistButton } from "@/components/watchlist/WatchlistButton";
 import { CommentsSection } from "@/components/comments/CommentsSection";
@@ -236,14 +235,13 @@ function useAutoNextEpisode(
 interface WatchClientProps {
   readonly id: string;
   readonly episode: string;
-  readonly initialAnime?: AniListAnime;
 }
 
-export default function WatchClient({ id, episode, initialAnime }: WatchClientProps) {
+export default function WatchClient({ id, episode }: WatchClientProps) {
   const searchParams = useSearchParams();
   const initLang = searchParams.get("lang") === "dub" ? "dub" : "sub";
 
-  const { data: anime, isLoading: isAnimeLoading } = useAnimeDetails(id, initialAnime);
+  const { data: anime, isLoading: isAnimeLoading } = useAnimeDetails(id);
   // Pass both MAL ID and AniList ID so the API can find the Anikoto row regardless of
   // which ID variant was used when syncing the database.
   const { counts, isLoading: isCountsLoading } = useEpisodeCounts(id, anime?.idMal, anime?.id);
@@ -290,13 +288,7 @@ export default function WatchClient({ id, episode, initialAnime }: WatchClientPr
   useAutoNextEpisode(id, episode, maxAvailableEpisodes, effectiveLanguage, counts);
 
   if ((isAnimeLoading && !anime) || (!anime && isCountsLoading)) {
-    return (
-      <div className="flex-1 flex flex-col items-center justify-center min-h-screen bg-void-black relative">
-        <div className="absolute inset-0 pointer-events-none opacity-5 bg-[repeating-linear-gradient(0deg,transparent,transparent_2px,rgba(255,255,255,0.03)_2px,rgba(255,255,255,0.03)_4px)]" />
-        <Grid size="60" speed="1" color="#FF003C" />
-        <span className="mt-8 font-label-caps text-cyber-cyan text-xs uppercase tracking-widest animate-pulse">INITIATING STREAM LINK...</span>
-      </div>
-    );
+    return <RouteLoading message="Loading episode details..." />;
   }
 
   if (!anime || !isSafeAnime(anime)) {
