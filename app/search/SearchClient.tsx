@@ -4,7 +4,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
 import { useState, useEffect, useRef, useCallback, useMemo } from "react";
-import { Search, X } from "lucide-react";
+import { RefreshCw, Search, SearchX, X } from "lucide-react";
 import { useExploreAnime } from "@/hooks/useAnime";
 import { Grid } from "ldrs/react";
 import "ldrs/react/Grid.css";
@@ -110,10 +110,16 @@ export default function SearchClient() {
   }, []);
 
   // TanStack Query: Stable memoized query and filter keys prevent loop queries
-  const { data, isLoading, isFetchingNextPage, fetchNextPage, hasNextPage } = useExploreAnime(
-    urlQuery,
-    filters
-  );
+  const {
+    data,
+    isLoading,
+    isError,
+    isFetchingNextPage,
+    isFetchNextPageError,
+    fetchNextPage,
+    hasNextPage,
+    refetch,
+  } = useExploreAnime(urlQuery, filters);
 
   const results = data?.pages.flatMap((page) => page.media) || [];
 
@@ -154,7 +160,7 @@ export default function SearchClient() {
           </h1>
           <div className="flex items-center gap-2">
             <span className="text-cyber-cyan/80 font-label-caps text-xs tracking-widest px-2.5 py-1 bg-surface-container/60 border border-cyber-cyan/30 clip-chip select-none">
-              {results.length} TITLES LOADED
+              {isLoading ? "SEARCHING..." : `${results.length} TITLES LOADED`}
             </span>
           </div>
         </div>
@@ -166,6 +172,8 @@ export default function SearchClient() {
           <Search className="w-4 h-4 text-cyber-cyan ml-3.5 shrink-0" />
           <input
             ref={searchInputRef}
+            id="catalog-search"
+            aria-label="Search anime catalog"
             type="text"
             value={searchInput}
             onChange={(e) => setSearchInput(e.target.value)}
@@ -194,6 +202,7 @@ export default function SearchClient() {
       {/* Advanced Filter Dropdowns */}
       <div className="flex flex-wrap gap-3 mb-stack-md">
         <select
+          aria-label="Filter by year"
           value={year}
           onChange={(e) => updateParams({ year: Number(e.target.value) })}
           className="bg-surface-container text-on-surface border border-outline-variant/40 px-3 py-2.5 font-label-caps text-xs clip-chip outline-none focus:border-neon-crimson hover:border-cyber-cyan transition-colors min-h-11 cursor-pointer"
@@ -207,6 +216,7 @@ export default function SearchClient() {
         </select>
 
         <select
+          aria-label="Filter by format"
           value={format}
           onChange={(e) => updateParams({ format: e.target.value })}
           className="bg-surface-container text-on-surface border border-outline-variant/40 px-3 py-2.5 font-label-caps text-xs clip-chip outline-none focus:border-neon-crimson hover:border-cyber-cyan transition-colors min-h-11 cursor-pointer"
@@ -219,6 +229,7 @@ export default function SearchClient() {
         </select>
 
         <select
+          aria-label="Filter by rating"
           value={score}
           onChange={(e) => updateParams({ score: Number(e.target.value) })}
           className="bg-surface-container text-on-surface border border-outline-variant/40 px-3 py-2.5 font-label-caps text-xs clip-chip outline-none focus:border-neon-crimson hover:border-cyber-cyan transition-colors min-h-11 cursor-pointer"
@@ -231,6 +242,7 @@ export default function SearchClient() {
         </select>
 
         <select
+          aria-label="Filter by release status"
           value={status}
           onChange={(e) => updateParams({ status: e.target.value })}
           className="bg-surface-container text-on-surface border border-outline-variant/40 px-3 py-2.5 font-label-caps text-xs clip-chip outline-none focus:border-neon-crimson hover:border-cyber-cyan transition-colors min-h-11 cursor-pointer"
@@ -242,6 +254,7 @@ export default function SearchClient() {
         </select>
 
         <select
+          aria-label="Sort anime"
           value={sort}
           onChange={(e) => updateParams({ sort: e.target.value })}
           className="bg-surface-container text-on-surface border border-outline-variant/40 px-3 py-2.5 font-label-caps text-xs clip-chip outline-none focus:border-neon-crimson hover:border-cyber-cyan transition-colors min-h-11 cursor-pointer md:ml-auto"
@@ -266,9 +279,25 @@ export default function SearchClient() {
       {/* Content Rendering: Skeletons vs Empty vs Results Grid */}
       {isLoading ? (
         <CatalogSkeletonGrid count={15} />
+      ) : isError && results.length === 0 ? (
+        <div role="alert" className="flex flex-col items-center justify-center py-20 text-center bg-surface-container/20 border border-outline-variant/20 clip-corner p-8">
+          <SearchX className="w-12 h-12 text-neon-crimson mb-4" aria-hidden="true" />
+          <h2 className="font-headline-xl text-on-surface text-xl">SEARCH COULD NOT LOAD</h2>
+          <p className="text-on-surface-variant/70 mt-2 font-label-caps text-xs max-w-md">
+            The catalog request failed. Check your connection and try again.
+          </p>
+          <button
+            type="button"
+            onClick={() => void refetch()}
+            className="mt-6 inline-flex items-center gap-2 px-6 py-2.5 bg-neon-crimson text-void-black font-label-caps text-xs font-bold clip-chip hover:shadow-[0_0_15px_rgba(255,0,60,0.5)] transition-all cursor-pointer min-h-11"
+          >
+            <RefreshCw className="w-4 h-4" aria-hidden="true" />
+            RETRY SEARCH
+          </button>
+        </div>
       ) : !results || results.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-20 text-center bg-surface-container/20 border border-outline-variant/20 clip-corner p-8">
-          <div className="text-6xl mb-4">👾</div>
+          <SearchX className="w-12 h-12 text-cyber-cyan mb-4" aria-hidden="true" />
           <h2 className="font-headline-xl text-on-surface text-xl">NO TELEMETRY FOUND</h2>
           <p className="text-on-surface-variant/70 mt-2 font-label-caps text-xs max-w-md">
             No anime matched your current search parameters. Try clearing filters or searching for another title.
@@ -283,8 +312,21 @@ export default function SearchClient() {
         </div>
       ) : (
         <div className="flex flex-col">
+          {(isError || isFetchNextPageError) && (
+            <div role="status" className="mb-4 flex flex-wrap items-center justify-between gap-3 border border-neon-crimson/40 bg-neon-crimson/5 px-4 py-3 text-xs font-label-caps text-on-surface-variant">
+              <span>Some results could not be refreshed. Your loaded titles are still available.</span>
+              <button
+                type="button"
+                onClick={() => void refetch()}
+                className="inline-flex min-h-11 items-center gap-2 px-3 text-neon-crimson hover:text-white transition-colors"
+              >
+                <RefreshCw className="w-3.5 h-3.5" aria-hidden="true" />
+                RETRY
+              </button>
+            </div>
+          )}
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-gutter">
-            {results.map((anime) => (
+            {results.map((anime, index) => (
               <Link
                 key={anime.idMal}
                 href={`/anime/${anime.idMal}`}
@@ -294,6 +336,7 @@ export default function SearchClient() {
                   src={anime.coverImage.extraLarge || anime.coverImage.large}
                   alt={anime.title.english || anime.title.romaji || ""}
                   fill
+                  loading={index === 0 ? "eager" : "lazy"}
                   sizes="(max-width: 768px) 50vw, (max-width: 1024px) 33vw, (max-width: 1280px) 25vw, 20vw"
                   className="object-cover opacity-85 group-hover:opacity-100 group-hover:scale-105 transition-all duration-300 z-0"
                 />
@@ -337,7 +380,7 @@ export default function SearchClient() {
                     <Grid size="20" speed="1" color="currentColor" /> LOADING...
                   </span>
                 ) : (
-                  "LOAD MORE ANIME"
+                  isFetchNextPageError ? "RETRY LOADING MORE" : "LOAD MORE ANIME"
                 )}
               </button>
             </div>

@@ -5,9 +5,7 @@ import { useSession, authClient } from "@/lib/auth-client";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
-import { Lock, Loader2, Bookmark, History, Trash2, Play } from "lucide-react";
-import { Grid } from 'ldrs/react';
-import 'ldrs/react/Grid.css';
+import { Lock, Loader2, Bookmark, History, Trash2, Play, RefreshCw } from "lucide-react";
 import { ProfileAnimeCard } from "@/components/profile/ProfileAnimeCard";
 import { useWatchStore } from "@/store/useWatchStore";
 import { ConfirmModal } from "@/components/ui/ConfirmModal";
@@ -57,13 +55,23 @@ export default function ProfileClient() {
   const [loadingPass, setLoadingPass] = useState(false);
 
   // Data State via centralized, cached hook
-  const { items: watchlist, isLoading: loadingData } = useWatchlist();
+  const {
+    items: watchlist,
+    isLoading: loadingData,
+    isError: watchlistError,
+    refetch: refetchWatchlist,
+  } = useWatchlist();
 
   // Batch-fetch all watchlist anime details in ONE AniList request instead of N per-card fetches.
   // This prevents the watchlist page from firing N concurrent requests to AniList,
   // which would instantly exhaust the per-IP rate limit for users with long watchlists.
   const watchlistIds = watchlist.map(item => item.animeId);
-  const { data: batchAnime, isLoading: loadingBatch } = useAnimeDetailsBatch(watchlistIds);
+  const {
+    data: batchAnime,
+    isLoading: loadingBatch,
+    isError: batchError,
+    refetch: refetchBatch,
+  } = useAnimeDetailsBatch(watchlistIds);
   const animeMap = new Map<string, AniListAnime>(
     (batchAnime ?? []).map(a => [String(a.idMal), a])
   );
@@ -98,7 +106,7 @@ export default function ProfileClient() {
     }
   };
 
-  if (isPending || !session) return <div className="min-h-screen bg-void-black flex items-center justify-center text-neon-crimson"><Grid size="50" speed="1" color="#FF003C" /></div>;
+  if (isPending || !session) return <div role="status" aria-live="polite" className="min-h-screen bg-void-black flex items-center justify-center text-neon-crimson"><Loader2 className="w-10 h-10 animate-spin" aria-hidden="true" /><span className="sr-only">Loading profile</span></div>;
 
   return (
     <div className="min-h-screen bg-void-black pt-24 pb-20 px-margin-mobile md:px-margin-desktop text-on-surface bg-[url('/noise.png')] bg-repeat">
@@ -150,19 +158,51 @@ export default function ProfileClient() {
             {activeTab === 'watchlist' && (
               <div className="animate-in fade-in duration-300">
                 <h3 className="font-headline-lg text-2xl text-white mb-6 uppercase">My Watchlist</h3>
-                {(loadingData || loadingBatch) ? <div className="py-12 flex justify-center"><Grid size="40" speed="1" color="#FF003C" /></div> : watchlist.length === 0 ? (
+                {(loadingData || (watchlist.length > 0 && loadingBatch)) ? (
+                  <div role="status" aria-live="polite" className="flex flex-col items-center justify-center gap-3 py-12 text-neon-crimson">
+                    <Loader2 className="w-8 h-8 animate-spin" aria-hidden="true" />
+                    <span className="font-label-caps text-xs text-on-surface-variant">Loading watchlist...</span>
+                  </div>
+                ) : watchlistError ? (
+                  <div role="alert" className="border border-neon-crimson/40 bg-neon-crimson/5 p-6 text-center">
+                    <p className="font-label-caps text-sm text-on-surface">Your watchlist could not be loaded.</p>
+                    <button
+                      type="button"
+                      onClick={() => void refetchWatchlist()}
+                      className="mt-4 inline-flex min-h-11 items-center gap-2 px-4 font-label-caps text-xs text-neon-crimson hover:text-white transition-colors"
+                    >
+                      <RefreshCw className="w-4 h-4" aria-hidden="true" />
+                      RETRY
+                    </button>
+                  </div>
+                ) : watchlist.length === 0 ? (
                   <p className="text-on-surface-variant font-label-caps">Watchlist is empty.</p>
                 ) : (
-                  <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
-                    {watchlist.map(item => (
-                      <ProfileAnimeCard
-                        key={item.id}
-                        animeId={item.animeId}
-                        dateAdded={item.createdAt}
-                        anime={animeMap.get(item.animeId)}
-                      />
-                    ))}
-                  </div>
+                  <>
+                    {batchError && (
+                      <div role="status" className="mb-4 flex flex-wrap items-center justify-between gap-3 border border-neon-crimson/40 bg-neon-crimson/5 px-4 py-3 text-xs font-label-caps text-on-surface-variant">
+                        <span>Some anime details could not be refreshed.</span>
+                        <button
+                          type="button"
+                          onClick={() => void refetchBatch()}
+                          className="inline-flex min-h-11 items-center gap-2 px-3 text-neon-crimson hover:text-white transition-colors"
+                        >
+                          <RefreshCw className="w-3.5 h-3.5" aria-hidden="true" />
+                          RETRY
+                        </button>
+                      </div>
+                    )}
+                    <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
+                      {watchlist.map(item => (
+                        <ProfileAnimeCard
+                          key={item.id}
+                          animeId={item.animeId}
+                          dateAdded={item.createdAt}
+                          anime={animeMap.get(item.animeId)}
+                        />
+                      ))}
+                    </div>
+                  </>
                 )}
               </div>
             )}

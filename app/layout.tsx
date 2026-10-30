@@ -6,7 +6,6 @@ import { QueryProvider } from "@/components/providers/QueryProvider";
 import { AuthModal } from "@/components/auth/AuthModal";
 import { AnalyticsTracker } from "@/components/layout/AnalyticsTracker";
 import { ProgressSyncProvider } from "@/components/providers/ProgressSyncProvider";
-import { AnimeNavigationLoader } from "@/components/layout/AnimeNavigationLoader";
 import "./globals.css";
 
 const spaceGrotesk = Space_Grotesk({
@@ -133,6 +132,7 @@ export default function RootLayout({
   return (
     <html
       lang="en"
+      data-scroll-behavior="smooth"
       className={`dark ${spaceGrotesk.variable} ${outfit.variable} ${jetbrainsMono.variable} h-full antialiased`}
     >
       <head>
@@ -141,13 +141,12 @@ export default function RootLayout({
           dangerouslySetInnerHTML={{ __html: JSON.stringify(websiteSchema) }}
         />
       </head>
-      <body className="min-h-full flex flex-col font-body bg-background text-foreground">
+      <body className="min-h-dvh flex flex-col font-body bg-background text-foreground">
         <QueryProvider>
           <Navbar />
           <AuthModal />
           <AnalyticsTracker />
           <ProgressSyncProvider />
-          <AnimeNavigationLoader />
           <main className="flex-1">{children}</main>
           <Footer />
         </QueryProvider>

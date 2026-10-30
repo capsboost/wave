@@ -67,38 +67,43 @@ export function Navbar() {
   };
 
   return (
-    <nav className="fixed top-0 w-full z-50 bg-surface-glass backdrop-blur-xl border-b border-neon-crimson/30 shadow-[0_0_15px_rgba(255,0,60,0.2)]">
-      <div className="flex justify-between items-center px-4 md:px-8 lg:px-margin-desktop py-2 md:py-3 w-full max-w-full">
-        <div className="flex items-center gap-4 lg:gap-gutter">
+    <nav className="fixed top-0 w-full z-50 bg-surface-glass backdrop-blur-xl border-b border-neon-crimson/25 shadow-[0_4px_24px_rgba(0,0,0,0.35)]">
+      <div className="flex items-center gap-2 px-margin-mobile sm:px-6 lg:px-margin-desktop py-2 md:py-3 w-full max-w-full">
+        <div className="flex min-w-0 flex-1 items-center gap-3 lg:gap-gutter">
           <Link
             href="/"
-            className="flex items-center group whitespace-nowrap focus:outline-none"
+            className="flex shrink-0 items-center group whitespace-nowrap focus:outline-none"
             aria-label="Wave Anime Home"
           >
             <WaveLogo variant="full" size="md" />
           </Link>
-          <div className="hidden md:flex items-center gap-4 lg:gap-stack-md font-label-caps text-[10px] lg:text-label-caps uppercase">
+          <div className="hidden min-w-0 flex-1 xl:block">
+            <div className="flex items-center gap-3 lg:gap-stack-md font-label-caps text-[10px] lg:text-label-caps uppercase">
             <Link
               href="/"
-              className={`${pathname === "/" ? "text-neon-crimson border-b-2 border-neon-crimson pb-1" : "text-on-surface-variant hover:text-cyber-cyan hover:drop-shadow-[0_0_8px_#FF003C]"} transition-all duration-300 scale-105 active:scale-95`}
+              aria-current={pathname === "/" ? "page" : undefined}
+              className={`${pathname === "/" ? "text-neon-crimson border-b-2 border-neon-crimson pb-1" : "text-on-surface-variant hover:text-cyber-cyan"} transition-colors duration-200`}
             >
               Home
             </Link>
             <Link
               href="/schedule"
-              className={`${pathname === "/schedule" ? "text-neon-crimson border-b-2 border-neon-crimson pb-1" : "text-on-surface-variant hover:text-cyber-cyan hover:drop-shadow-[0_0_8px_#FF003C]"} transition-all duration-300 scale-105 active:scale-95`}
+              aria-current={pathname === "/schedule" ? "page" : undefined}
+              className={`${pathname === "/schedule" ? "text-neon-crimson border-b-2 border-neon-crimson pb-1" : "text-on-surface-variant hover:text-cyber-cyan"} transition-colors duration-200`}
             >
               Schedule
             </Link>
             <Link
               href="/search"
-              className={`${pathname === "/search" ? "text-neon-crimson border-b-2 border-neon-crimson pb-1" : "text-on-surface-variant hover:text-cyber-cyan hover:drop-shadow-[0_0_8px_#FF003C]"} transition-all duration-300 scale-105 active:scale-95`}
+              aria-current={pathname === "/search" ? "page" : undefined}
+              className={`${pathname === "/search" ? "text-neon-crimson border-b-2 border-neon-crimson pb-1" : "text-on-surface-variant hover:text-cyber-cyan"} transition-colors duration-200`}
             >
               Catalog
             </Link>
             <Link
               href="/continue-watching"
-              className={`${pathname === "/continue-watching" ? "text-neon-crimson border-b-2 border-neon-crimson pb-1" : "text-on-surface-variant hover:text-cyber-cyan hover:drop-shadow-[0_0_8px_#FF003C]"} transition-all duration-300 scale-105 active:scale-95`}
+              aria-current={pathname === "/continue-watching" ? "page" : undefined}
+              className={`${pathname === "/continue-watching" ? "text-neon-crimson border-b-2 border-neon-crimson pb-1" : "text-on-surface-variant hover:text-cyber-cyan"} transition-colors duration-200`}
             >
               Recents
             </Link>
@@ -106,7 +111,7 @@ export function Navbar() {
               href="https://flicmovies.me"
               target="_blank"
               rel="noopener noreferrer"
-              className="text-on-surface-variant hover:text-cyber-cyan hover:drop-shadow-[0_0_8px_#FF003C] transition-all duration-300 scale-105 active:scale-95"
+              className="whitespace-nowrap text-on-surface-variant hover:text-cyber-cyan transition-colors duration-200"
             >
               Movies & TV Shows
             </a>
@@ -114,20 +119,22 @@ export function Navbar() {
               href="https://sports.flicmovies.me"
               target="_blank"
               rel="noopener noreferrer"
-              className="text-on-surface-variant hover:text-cyber-cyan hover:drop-shadow-[0_0_8px_#FF003C] transition-all duration-300 scale-105 active:scale-95"
+              className="whitespace-nowrap text-on-surface-variant hover:text-cyber-cyan transition-colors duration-200"
             >
               Sports
             </a>
+            </div>
           </div>
         </div>
-        <div className="flex items-center gap-2 lg:gap-stack-md">
-          <div ref={wrapperRef} className="relative hidden md:block">
+        <div className="flex shrink-0 items-center gap-1.5 sm:gap-2 lg:gap-stack-md">
+          <div ref={wrapperRef} className="relative hidden xl:block">
             <form 
               onSubmit={handleSearch}
-              className="flex items-center relative border-b border-outline-variant focus-within:border-neon-crimson transition-colors bg-surface-glass w-40 lg:w-64"
+              className="flex items-center relative border-b border-outline-variant focus-within:border-neon-crimson transition-colors bg-surface-glass w-28 lg:w-40 xl:w-64"
             >
               <Search className="w-4 h-4 text-on-surface-variant ml-2" />
               <input
+                aria-label="Search anime"
                 type="text"
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
@@ -191,7 +198,11 @@ export function Navbar() {
           
           {/* Mobile Search Toggle */}
           <button 
-            className="md:hidden text-on-surface-variant hover:text-cyber-cyan transition-colors p-2 nav-glow"
+            type="button"
+            aria-label={isMobileSearchOpen ? "Close search" : "Open search"}
+            aria-expanded={isMobileSearchOpen}
+            aria-controls="mobile-search-panel"
+            className="xl:hidden text-on-surface-variant hover:text-cyber-cyan transition-colors p-2 nav-glow"
             onClick={() => {
               setIsMobileSearchOpen(!isMobileSearchOpen);
               setIsMobileMenuOpen(false);
@@ -202,8 +213,11 @@ export function Navbar() {
           </button>
 
           {/* Mobile Notification Toggle */}
-          <div className="relative md:hidden">
+          <div className="relative xl:hidden">
             <button 
+              type="button"
+              aria-label={isNotificationPanelOpen ? "Close notifications" : `Open notifications${unreadCount ? `, ${unreadCount} unread` : ""}`}
+              aria-expanded={isNotificationPanelOpen}
               onClick={() => {
                 setIsNotificationPanelOpen(!isNotificationPanelOpen);
                 setIsMobileMenuOpen(false);
@@ -223,7 +237,11 @@ export function Navbar() {
           
           {/* Mobile Menu Toggle */}
           <button 
-            className={`md:hidden flex items-center justify-center w-10 h-10 transition-all duration-300 clip-corner ${isMobileMenuOpen ? 'bg-neon-crimson text-void-black shadow-[0_0_15px_rgba(255,0,60,0.5)]' : 'bg-surface-glass border border-outline-variant/30 text-on-surface hover:border-neon-crimson hover:text-neon-crimson'}`}
+            type="button"
+            aria-label={isMobileMenuOpen ? "Close navigation menu" : "Open navigation menu"}
+            aria-expanded={isMobileMenuOpen}
+            aria-controls="mobile-navigation-menu"
+            className={`xl:hidden flex items-center justify-center w-10 h-10 transition-all duration-300 clip-corner ${isMobileMenuOpen ? 'bg-neon-crimson text-void-black shadow-[0_0_15px_rgba(255,0,60,0.5)]' : 'bg-surface-glass border border-outline-variant/30 text-on-surface hover:border-neon-crimson hover:text-neon-crimson'}`}
             onClick={() => {
               setIsMobileMenuOpen(!isMobileMenuOpen);
               setIsMobileSearchOpen(false);
@@ -233,8 +251,11 @@ export function Navbar() {
             {isMobileMenuOpen ? <X className="w-5 h-5 animate-in spin-in-90 duration-300" /> : <Menu className="w-5 h-5 animate-in spin-in-[-90deg] duration-300" />}
           </button>
 
-          <div className="relative hidden md:block">
+          <div className="relative hidden xl:block">
             <button 
+              type="button"
+              aria-label={isNotificationPanelOpen ? "Close notifications" : `Open notifications${unreadCount ? `, ${unreadCount} unread` : ""}`}
+              aria-expanded={isNotificationPanelOpen}
               onClick={() => {
                 setIsNotificationPanelOpen(!isNotificationPanelOpen);
                 setIsProfileMenuOpen(false);
@@ -252,10 +273,13 @@ export function Navbar() {
           </div>
           
           {isPending ? (
-            <div className="hidden md:block w-8 h-8 bg-surface-container animate-pulse clip-chip" />
+            <div className="hidden xl:block w-8 h-8 bg-surface-container animate-pulse clip-chip" />
           ) : session ? (
-            <div className="relative hidden md:block">
+            <div className="relative hidden xl:block">
               <button 
+                type="button"
+                aria-label="Open profile menu"
+                aria-expanded={isProfileMenuOpen}
                 onClick={() => {
                   setIsProfileMenuOpen(!isProfileMenuOpen);
                   setIsNotificationPanelOpen(false);
@@ -278,7 +302,7 @@ export function Navbar() {
           ) : (
             <button 
               onClick={() => openModal('login')}
-              className="hidden md:flex items-center gap-2 bg-neon-crimson/10 border border-neon-crimson text-neon-crimson px-4 py-2 font-label-caps text-xs clip-chip hover:bg-neon-crimson hover:text-void-black transition-colors"
+              className="hidden xl:flex items-center gap-2 bg-neon-crimson/10 border border-neon-crimson text-neon-crimson px-4 py-2 font-label-caps text-xs clip-chip hover:bg-neon-crimson hover:text-void-black transition-colors"
             >
               <UserIcon className="w-4 h-4" /> LOG IN
             </button>
@@ -288,7 +312,7 @@ export function Navbar() {
 
       {/* Mobile Navigation Menu */}
       {isMobileMenuOpen && (
-        <div className="md:hidden absolute top-full left-0 w-full bg-void-black/95 backdrop-blur-2xl border-b border-neon-crimson/50 flex flex-col shadow-[0_20px_40px_rgba(255,0,60,0.15)] z-40 animate-in slide-in-from-top-2 duration-300">
+        <div id="mobile-navigation-menu" className="xl:hidden absolute top-full left-0 w-full bg-void-black/95 backdrop-blur-2xl border-b border-neon-crimson/50 flex flex-col shadow-[0_20px_40px_rgba(255,0,60,0.15)] z-40 animate-in slide-in-from-top-2 duration-300">
           <div className="flex flex-col p-4 gap-3">
             <Link
               href="/"
@@ -384,13 +408,14 @@ export function Navbar() {
 
       {/* Mobile Search Bar Overlay */}
       {isMobileSearchOpen && (
-        <div className="md:hidden absolute top-full left-0 w-full bg-surface-container/95 backdrop-blur-xl border-b border-outline-variant/30 p-4 shadow-[0_10px_30px_rgba(0,0,0,0.8)] z-40">
+        <div id="mobile-search-panel" className="xl:hidden absolute top-full left-0 w-full bg-surface-container/95 backdrop-blur-xl border-b border-outline-variant/30 p-4 shadow-[0_10px_30px_rgba(0,0,0,0.8)] z-40">
           <form 
             onSubmit={handleSearch}
             className="flex items-center relative border border-outline-variant focus-within:border-neon-crimson transition-colors bg-surface-glass w-full mb-2"
           >
             <Search className="w-4 h-4 text-on-surface-variant ml-3" />
             <input
+              aria-label="Search anime"
               type="text"
               value={query}
               onChange={(e) => setQuery(e.target.value)}

@@ -8,6 +8,7 @@ import { useAnimeDetails } from "@/hooks/useAnime";
 import { type AniListAnime, isSafeAnime } from "@/lib/api/anilist";
 import { RouteLoading } from "@/components/ui/RouteLoading";
 import { RouteLoadError } from "@/components/ui/RouteLoadError";
+import { useAnimePageMetadata } from "@/hooks/useAnimePageMetadata";
 import { WatchlistButton } from "@/components/watchlist/WatchlistButton";
 import { useWatchStore, getAnimeResumeInfo } from "@/store/useWatchStore";
 import { useMounted } from "@/hooks/useMounted";
@@ -59,6 +60,7 @@ interface AnimeClientProps {
 
 export default function AnimeClient({ id }: AnimeClientProps) {
   const { data: anime, isLoading: isAnimeLoading, isError, refetch } = useAnimeDetails(id);
+  useAnimePageMetadata(anime);
   const [episodeChunk, setEpisodeChunk] = useState(0);
   const [language, setLanguage] = useState<"sub" | "dub">("sub");
   const [counts, setCounts] = useState<{ is_sub: number | null, is_dub: number | null } | null>(null);
@@ -168,6 +170,8 @@ export default function AnimeClient({ id }: AnimeClientProps) {
     () => (anime ? getCleanDescription(anime.description) : ''),
     [anime]
   );
+  const dubAvailabilityUnknown = counts !== null && counts.is_dub === null;
+  const dubUnavailable = counts !== null && typeof counts.is_dub === "number" && counts.is_dub <= 0;
 
   if (isAnimeLoading && !anime) {
     return <RouteLoading message="Loading anime details..." />;
@@ -179,8 +183,12 @@ export default function AnimeClient({ id }: AnimeClientProps) {
 
   if (!anime || !isSafeAnime(anime)) {
     return (
-      <div className="flex-1 flex items-center justify-center min-h-screen bg-void-black text-on-surface">
+      <div className="flex-1 flex min-h-screen flex-col items-center justify-center gap-4 bg-void-black px-4 text-center text-on-surface">
         <h1 className="font-headline-xl text-headline-xl">Anime not found</h1>
+        <p className="max-w-md text-on-surface-variant">This title may have been removed or its page could not be found.</p>
+        <Link href="/search" className="min-h-11 px-5 py-3 font-label-caps text-xs text-neon-crimson border border-neon-crimson/50 hover:bg-neon-crimson/10 transition-colors">
+          RETURN TO CATALOG
+        </Link>
       </div>
     );
   }
@@ -373,18 +381,31 @@ export default function AnimeClient({ id }: AnimeClientProps) {
                     setLanguage("dub");
                   }
                 }}
-                disabled={counts !== null && (!counts.is_dub || counts.is_dub <= 0)}
+                disabled={dubAvailabilityUnknown || dubUnavailable}
                 className={`flex items-center gap-1.5 font-label-caps text-xs px-3 py-1.5 transition-all clip-chip ${
                   language === "dub" 
                     ? 'bg-neon-crimson text-void-black font-bold shadow-[0_0_10px_rgba(255,0,60,0.5)]' 
                     : 'bg-surface-container-low text-on-surface-variant hover:bg-surface-glass hover:text-white'
-                } ${counts !== null && (!counts.is_dub || counts.is_dub <= 0) ? 'opacity-30 cursor-not-allowed pointer-events-none' : 'cursor-pointer'}`}
-                title={counts !== null && (!counts.is_dub || counts.is_dub <= 0) ? "Dub not available for this anime" : "Switch to DUB"}
+                } ${dubAvailabilityUnknown || dubUnavailable ? 'opacity-30 cursor-not-allowed pointer-events-none' : 'cursor-pointer'}`}
+                title={
+                  dubAvailabilityUnknown
+                    ? "Dub availability could not be confirmed"
+                    : dubUnavailable
+                      ? "Dub not available for this anime"
+                      : "Switch to DUB"
+                }
               >
                 <Mic className="w-3 h-3" /> DUB
               </button>
             </div>
           </div>
+          {(dubAvailabilityUnknown || dubUnavailable) && (
+            <p role="status" className="mt-2 text-right font-label-caps text-[10px] text-on-surface-variant">
+              {dubAvailabilityUnknown
+                ? "DUB availability could not be confirmed for this title."
+                : "DUB audio is not listed for this title."}
+            </p>
+          )}
           
           {/* Episode Pagination */}
           {numChunks > 1 && (

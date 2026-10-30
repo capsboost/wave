@@ -4,13 +4,17 @@ import Image from "next/image";
 import Link from "next/link";
 import { useState, useEffect } from "react";
 import { CalendarClock } from "lucide-react";
-import type { AniListAnime } from "@/lib/api/anilist";
+import { useSchedule } from "@/hooks/useAnime";
+import { RouteLoadError } from "@/components/ui/RouteLoadError";
+import { RouteLoading } from "@/components/ui/RouteLoading";
 
-interface ScheduleClientProps {
-  initialSchedule: AniListAnime[];
-}
-
-export default function ScheduleClient({ initialSchedule: scheduleAnime }: ScheduleClientProps) {
+export default function ScheduleClient() {
+  const {
+    data: scheduleAnime = [],
+    isLoading,
+    isError,
+    refetch,
+  } = useSchedule(50);
 
   const formatAiringDate = (timestamp: number) => {
     const date = new Date(timestamp * 1000);
@@ -131,11 +135,23 @@ export default function ScheduleClient({ initialSchedule: scheduleAnime }: Sched
   const groupedSchedule = getGroupedSchedule();
 
   let content;
-  if (!scheduleAnime || scheduleAnime.length === 0) {
+  if (isLoading && scheduleAnime.length === 0) {
+    content = <RouteLoading message="Loading airing schedule..." />;
+  } else if (isError && scheduleAnime.length === 0) {
+    content = (
+      <RouteLoadError
+        message="The airing schedule could not be loaded."
+        onRetry={() => void refetch()}
+      />
+    );
+  } else if (scheduleAnime.length === 0) {
     content = (
       <div className="flex flex-col items-center justify-center h-[50vh] text-center">
-        <div className="text-6xl mb-4">👾</div>
-        <h2 className="font-headline-xl text-on-surface-variant text-xl">NO DATA FOUND</h2>
+        <CalendarClock className="w-12 h-12 text-cyber-cyan mb-4" aria-hidden="true" />
+        <h2 className="font-headline-xl text-on-surface-variant text-xl">NO UPCOMING EPISODES</h2>
+        <p className="mt-2 max-w-md text-sm text-on-surface-variant">
+          The schedule has no upcoming releases right now. Check back later.
+        </p>
       </div>
     );
   } else {

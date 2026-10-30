@@ -1,8 +1,5 @@
 import type { Metadata } from "next";
 import ScheduleClient from "./ScheduleClient";
-import { anilistApi } from "@/lib/api/anilist";
-
-export const revalidate = 3600;
 
 export const metadata: Metadata = {
   title: "Anime Airing Schedule & Simulcast Release Calendar",
@@ -23,10 +20,6 @@ export const metadata: Metadata = {
   },
 };
 
-export default async function Page() {
-  const scheduleAnime = await anilistApi.getAiringSchedule(50).catch(() => []);
-
-  return (
-    <ScheduleClient initialSchedule={scheduleAnime} />
-  );
+export default function Page() {
+  return <ScheduleClient />;
 }

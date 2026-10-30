@@ -49,7 +49,8 @@ rounded:
   sm: "0px"
   md: "0px"
 spacing:
-  gutter: "24px"
+  gutter: "clamp(16px, 2vw, 24px)"
+  page-margin-desktop: "clamp(32px, 5vw, 64px)"
   stack-sm: "8px"
   stack-md: "16px"
   stack-lg: "32px"
@@ -87,6 +88,8 @@ The visual experience relies on pitch-black void surfaces (`#020204`), sharp geo
 - Angular cutouts and clipped corners (`clip-corner`) instead of rounded cards or pill buttons.
 - Distinct triple-font hierarchy: Space Grotesk for titles, Outfit for descriptions, and JetBrains Mono for metadata chips.
 - Interactive neon glows and custom crimson scrollbars.
+- Keyboard focus uses a clear cyan outline; reduced-motion preferences disable smooth scrolling and decorative motion.
+- Page margins and grid gutters scale fluidly from compact mobile spacing to the desktop maximum.
 
 ## Colors
 

@@ -49,15 +49,22 @@ export function AuthModal() {
 
   return (
     <div className="fixed inset-0 z-100 flex items-center justify-center bg-void-black/80 backdrop-blur-sm p-4">
-      <div className="relative w-full max-w-md bg-surface-container border border-outline-variant/30 clip-corner shadow-[0_10px_40px_rgba(255,0,60,0.15)] animate-in fade-in zoom-in duration-200">
+      <div
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="auth-modal-title"
+        className="relative w-full max-w-md bg-surface-container border border-outline-variant/30 clip-corner shadow-[0_10px_40px_rgba(255,0,60,0.15)] animate-in fade-in zoom-in duration-200"
+      >
         
         {/* Header */}
         <div className="flex justify-between items-center p-6 border-b border-outline-variant/20">
-          <h2 className="font-headline-lg text-2xl text-on-surface uppercase tracking-wider">
+          <h2 id="auth-modal-title" className="font-headline-lg text-2xl text-on-surface uppercase tracking-wider">
             {view === 'login' ? 'Login' : view === 'register' ? 'Register' : 'Reset Password'}
           </h2>
           <button 
+            type="button"
             onClick={closeModal}
+            aria-label="Close authentication dialog"
             className="text-on-surface-variant hover:text-neon-crimson transition-colors"
           >
             <X className="w-6 h-6" />
@@ -67,7 +74,7 @@ export function AuthModal() {
         {/* Body */}
         <div className="p-6">
           {error && (
-            <div className="bg-neon-crimson/10 border border-neon-crimson text-neon-crimson p-3 text-sm font-label-caps mb-6">
+            <div role="alert" className="bg-neon-crimson/10 border border-neon-crimson text-neon-crimson p-3 text-sm font-label-caps mb-6">
               {error}
             </div>
           )}
@@ -75,10 +82,11 @@ export function AuthModal() {
           <form onSubmit={handleSubmit} className="space-y-4">
             {view === 'register' && (
               <div className="space-y-1">
-                <label className="text-xs font-label-caps text-on-surface-variant uppercase">Username</label>
+                <label htmlFor="auth-name" className="text-xs font-label-caps text-on-surface-variant uppercase">Username</label>
                 <div className="relative">
                   <User className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-on-surface-variant" />
                   <input 
+                    id="auth-name"
                     type="text" 
                     value={name}
                     onChange={(e) => setName(e.target.value)}
@@ -91,10 +99,11 @@ export function AuthModal() {
             )}
 
             <div className="space-y-1">
-              <label className="text-xs font-label-caps text-on-surface-variant uppercase">Email</label>
+              <label htmlFor="auth-email" className="text-xs font-label-caps text-on-surface-variant uppercase">Email</label>
               <div className="relative">
                 <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-on-surface-variant" />
                 <input 
+                  id="auth-email"
                   type="email" 
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
@@ -107,10 +116,11 @@ export function AuthModal() {
 
             {view !== 'forgot_password' && (
               <div className="space-y-1">
-                <label className="text-xs font-label-caps text-on-surface-variant uppercase">Password</label>
+                <label htmlFor="auth-password" className="text-xs font-label-caps text-on-surface-variant uppercase">Password</label>
                 <div className="relative">
                   <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-on-surface-variant" />
                   <input 
+                    id="auth-password"
                     type="password" 
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}

@@ -21,7 +21,8 @@ import {
   Moon,
   Sunset,
   Coffee,
-  Sparkles
+  Sparkles,
+  RefreshCw
 } from "lucide-react";
 import { timeAgo } from "@/lib/timeAgo";
 import { ConfirmModal } from "@/components/ui/ConfirmModal";
@@ -95,7 +96,12 @@ export default function AdminDashboard() {
   const svgRef = useRef<SVGSVGElement | null>(null);
 
   // Fetch Stats
-  const { data: stats, isLoading: statsLoading } = useQuery<AdminStats>({
+  const {
+    data: stats,
+    isLoading: statsLoading,
+    isError: statsError,
+    refetch: refetchStats,
+  } = useQuery<AdminStats>({
     queryKey: ["adminStats", range],
     queryFn: async () => {
       const res = await fetch(`/api/admin/stats?range=${range}`);
@@ -106,7 +112,12 @@ export default function AdminDashboard() {
   });
 
   // Fetch Broadcasts History
-  const { data: broadcastsData, isLoading: broadcastsLoading } = useQuery<{ broadcasts: Broadcast[] }>({
+  const {
+    data: broadcastsData,
+    isLoading: broadcastsLoading,
+    isError: broadcastsError,
+    refetch: refetchBroadcasts,
+  } = useQuery<{ broadcasts: Broadcast[] }>({
     queryKey: ["adminBroadcasts"],
     queryFn: async () => {
       const res = await fetch("/api/admin/broadcasts");
@@ -359,11 +370,11 @@ export default function AdminDashboard() {
 
             {/* Unique Visitors */}
             <div className="bg-surface-container border border-outline-variant/30 p-4 clip-corner relative overflow-hidden group shadow-[0_4px_20px_rgba(0,0,0,0.4)]">
-              <div className="flex items-center justify-between text-purple-400 mb-1">
+              <div className="flex items-center justify-between text-data-purple mb-1">
                 <span className="font-label-caps text-[10px] uppercase tracking-widest text-on-surface-variant">Unique Visitors</span>
                 <Users className="w-4 h-4" />
               </div>
-              <div className="font-headline-xl text-3xl font-bold text-purple-300 tracking-tight drop-shadow-[0_0_10px_rgba(168,85,247,0.3)]">
+              <div className="font-headline-xl text-3xl font-bold text-data-purple tracking-tight drop-shadow-[0_0_10px_rgba(189,0,255,0.3)]">
                 {stats ? stats.uniqueVisitors.toLocaleString() : "..."}
               </div>
               <div className="flex items-center gap-1.5 mt-2 font-label-caps text-[11px]">
@@ -447,10 +458,10 @@ export default function AdminDashboard() {
                     type="button"
                     onClick={() => setMetricMode("visitors")}
                     className={`px-2.5 py-0.5 font-label-caps text-[10px] clip-chip transition-all cursor-pointer flex items-center gap-1 ${
-                      metricMode === "visitors" ? "bg-purple-400 text-void-black font-bold" : "text-purple-400 hover:bg-purple-400/10"
+                      metricMode === "visitors" ? "bg-data-purple text-void-black font-bold" : "text-data-purple hover:bg-data-purple/10"
                     }`}
                   >
-                    <span className="w-1.5 h-1.5 rounded-full bg-purple-400 inline-block" />
+                    <span className="w-1.5 h-1.5 rounded-full bg-data-purple inline-block" />
                     Visitors
                   </button>
                 </div>
@@ -484,9 +495,26 @@ export default function AdminDashboard() {
             </div>
 
             {/* Chart Canvas Area */}
+            {statsError && stats && (
+              <p role="status" className="mb-3 text-xs font-label-caps text-on-surface-variant">
+                Analytics refresh failed; showing the last loaded data.
+              </p>
+            )}
             {statsLoading ? (
               <div className="h-64 flex items-center justify-center animate-pulse">
                 <span className="font-label-caps text-xs text-cyber-cyan">CALCULATING TELEMETRY CURVES...</span>
+              </div>
+            ) : statsError && !stats ? (
+              <div role="alert" className="h-64 flex flex-col items-center justify-center gap-3 text-center">
+                <span className="font-label-caps text-xs text-on-surface-variant">Analytics could not be loaded.</span>
+                <button
+                  type="button"
+                  onClick={() => void refetchStats()}
+                  className="inline-flex min-h-11 items-center gap-2 px-4 font-label-caps text-xs text-cyber-cyan hover:text-white transition-colors"
+                >
+                  <RefreshCw className="w-4 h-4" aria-hidden="true" />
+                  RETRY ANALYTICS
+                </button>
               </div>
             ) : !chartData.length ? (
               <div className="h-64 flex items-center justify-center text-on-surface-variant font-label-caps text-xs">
@@ -648,7 +676,7 @@ export default function AdminDashboard() {
                       <div className="h-px w-full bg-cyber-cyan/20 my-1.5" />
                       <div className="flex items-center gap-4 text-cyber-cyan">
                         <span>Views: <strong className="text-white text-sm">{activePoint.views.toLocaleString()}</strong></span>
-                        <span className="text-purple-300">Visitors: <strong className="text-white text-sm">{activePoint.visitors.toLocaleString()}</strong></span>
+                        <span className="text-data-purple">Visitors: <strong className="text-white text-sm">{activePoint.visitors.toLocaleString()}</strong></span>
                         <span className="text-on-surface-variant text-[10px]">
                           Ratio: {activePoint.visitors > 0 ? (activePoint.views / activePoint.visitors).toFixed(1) : 1}x
                         </span>
@@ -746,7 +774,7 @@ export default function AdminDashboard() {
             <div className="bg-surface-container border border-outline-variant/30 p-4 clip-corner shadow-[0_4px_20px_rgba(0,0,0,0.4)] flex flex-col justify-between">
               <div>
                 <div className="flex items-center justify-between mb-3 border-b border-outline-variant/20 pb-2">
-                  <h4 className="font-headline-md text-xs uppercase text-purple-400 tracking-wider flex items-center gap-1.5">
+                  <h4 className="font-headline-md text-xs uppercase text-data-purple tracking-wider flex items-center gap-1.5">
                     <Clock className="w-3.5 h-3.5" />
                     <span>Daypart Traffic Density</span>
                   </h4>
@@ -768,11 +796,11 @@ export default function AdminDashboard() {
                   {/* Night */}
                   <div className="bg-void-black/50 p-2 border border-outline-variant/20 clip-chip">
                     <div className="flex items-center justify-between text-[11px] mb-1">
-                      <span className="text-on-surface-variant flex items-center gap-1"><Moon className="w-3 h-3 text-purple-400" /> Late Night</span>
+                      <span className="text-on-surface-variant flex items-center gap-1"><Moon className="w-3 h-3 text-data-purple" /> Late Night</span>
                       <span className="text-white font-bold">{Math.round(((stats?.dayParts?.night || 0) / totalDaypartViews) * 100)}%</span>
                     </div>
                     <div className="h-1 bg-surface-container-high w-full clip-chip overflow-hidden">
-                      <div className="h-full bg-purple-400" style={{ width: `${((stats?.dayParts?.night || 0) / totalDaypartViews) * 100}%` }} />
+                      <div className="h-full bg-data-purple" style={{ width: `${((stats?.dayParts?.night || 0) / totalDaypartViews) * 100}%` }} />
                     </div>
                   </div>
 
@@ -918,21 +946,40 @@ export default function AdminDashboard() {
                 <div className="animate-pulse flex flex-col gap-2">
                   {[1,2,3].map(i => <div key={i} className="h-12 bg-cyber-cyan/10 border-l-2 border-cyber-cyan/30 w-full" />)}
                 </div>
+              ) : broadcastsError && !broadcastsData ? (
+                <div role="alert" className="flex flex-col items-start gap-3 py-4">
+                  <p className="font-label-caps text-xs text-on-surface-variant">System log could not be loaded.</p>
+                  <button
+                    type="button"
+                    onClick={() => void refetchBroadcasts()}
+                    className="inline-flex min-h-11 items-center gap-2 font-label-caps text-xs text-cyber-cyan hover:text-white transition-colors"
+                  >
+                    <RefreshCw className="w-4 h-4" aria-hidden="true" />
+                    RETRY LOG
+                  </button>
+                </div>
               ) : broadcastsData?.broadcasts.length === 0 ? (
                 <p className="text-cyber-cyan/50 font-label-caps text-xs">No entries in system log.</p>
               ) : (
-                broadcastsData?.broadcasts.map(b => (
-                  <div key={b.id} className="p-3 border-l-2 border-cyber-cyan/50 hover:border-cyber-cyan hover:bg-cyber-cyan/5 transition-all group/log bg-surface-container/30">
-                    <div className="flex justify-between items-start gap-4 mb-1">
-                      <span className="font-label-caps text-xs text-cyber-cyan group-hover/log:text-white transition-colors truncate">
-                        <span className="text-cyber-cyan/50 mr-2">[{b.id.slice(0, 6).toUpperCase()}]</span>
-                        {b.title}
-                      </span>
-                      <span className="font-label-caps text-[10px] text-cyber-cyan/70 shrink-0">{timeAgo(b.createdAt)}</span>
+                <>
+                  {broadcastsError && (
+                    <p role="status" className="text-xs font-label-caps text-on-surface-variant">
+                      System log refresh failed; showing the last loaded entries.
+                    </p>
+                  )}
+                  {broadcastsData?.broadcasts.map(b => (
+                    <div key={b.id} className="p-3 border-l-2 border-cyber-cyan/50 hover:border-cyber-cyan hover:bg-cyber-cyan/5 transition-all group/log bg-surface-container/30">
+                      <div className="flex justify-between items-start gap-4 mb-1">
+                        <span className="font-label-caps text-xs text-cyber-cyan group-hover/log:text-white transition-colors truncate">
+                          <span className="text-cyber-cyan/50 mr-2">[{b.id.slice(0, 6).toUpperCase()}]</span>
+                          {b.title}
+                        </span>
+                        <span className="font-label-caps text-[10px] text-cyber-cyan/70 shrink-0">{timeAgo(b.createdAt)}</span>
+                      </div>
+                      <p className="font-label-caps text-[11px] text-on-surface-variant/80 line-clamp-2 pl-1">{b.message}</p>
                     </div>
-                    <p className="font-label-caps text-[11px] text-on-surface-variant/80 line-clamp-2 pl-1">{b.message}</p>
-                  </div>
-                ))
+                  ))}
+                </>
               )}
             </div>
           </div>

@@ -8,6 +8,7 @@ import { useAnimeDetails } from "@/hooks/useAnime";
 import { type AniListAnime, isSafeAnime } from "@/lib/api/anilist";
 import { RouteLoading } from "@/components/ui/RouteLoading";
 import { RouteLoadError } from "@/components/ui/RouteLoadError";
+import { useAnimePageMetadata } from "@/hooks/useAnimePageMetadata";
 import { useWatchStore } from "@/store/useWatchStore";
 import { WatchlistButton } from "@/components/watchlist/WatchlistButton";
 import { CommentsSection } from "@/components/comments/CommentsSection";
@@ -248,6 +249,7 @@ export default function WatchClient({ id, episode }: WatchClientProps) {
   const initLang = searchParams.get("lang") === "dub" ? "dub" : "sub";
 
   const { data: anime, isLoading: isAnimeLoading, isError, refetch } = useAnimeDetails(id);
+  useAnimePageMetadata(anime, episode);
   // Pass both MAL ID and AniList ID so the API can find the Anikoto row regardless of
   // which ID variant was used when syncing the database.
   const { counts } = useEpisodeCounts(id, anime?.idMal, anime?.id);

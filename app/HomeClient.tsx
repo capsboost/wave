@@ -8,24 +8,18 @@ import { timeAgo } from "@/lib/timeAgo";
 import { useMounted } from "@/hooks/useMounted";
 import { HeroCarousel } from "@/components/home/HeroCarousel";
 import { useRef } from "react";
-import type { AniListAnime } from "@/lib/api/anilist";
+import { useRecentEpisodes, useSchedule, useTopThisWeek, useTrendingAnime } from "@/hooks/useAnime";
 
-interface HomeClientProps {
-  heroAnimeList: AniListAnime[];
-  trendingAnime: AniListAnime[];
-  recentEpisodes: AniListAnime[];
-  topThisWeek: AniListAnime[];
-  scheduleAnime: AniListAnime[];
-}
-
-export default function HomeClient({
-  heroAnimeList,
-  trendingAnime,
-  recentEpisodes,
-  topThisWeek,
-  scheduleAnime
-}: HomeClientProps) {
-  // Data passed from server component
+export default function HomeClient() {
+  const {
+    data: heroAnimeList = [],
+    isError: isHeroError,
+    refetch: refetchHero,
+  } = useTrendingAnime(10, 1);
+  const { data: trendingAnime = [] } = useTrendingAnime(15, 2);
+  const { data: recentEpisodes = [] } = useRecentEpisodes(20);
+  const { data: topThisWeek = [] } = useTopThisWeek(9);
+  const { data: scheduleAnime = [] } = useSchedule(15);
 
   // Hydration safe store access
   const history = useWatchStore((state) => state.history);
@@ -42,11 +36,60 @@ export default function HomeClient({
   };
 
   const historyItems = Object.values(history).sort((a, b) => b.timestamp - a.timestamp).slice(0, 5);
+  const renderRecentCard = (anime: (typeof recentEpisodes)[number], idx: number) => (
+    <Link key={`recent-${anime.idMal || anime.id}-${idx}`} href={`/anime/${anime.idMal}`} className="relative aspect-3/4 bg-surface-container rounded-none overflow-hidden group border border-transparent hover:scale-[1.02] hover:border-cyber-cyan transition-all duration-300 block clip-corner">
+      <Image
+        src={anime.coverImage.extraLarge}
+        alt={anime.title.english || anime.title.romaji || ""}
+        fill
+        className="absolute inset-0 object-cover opacity-80 group-hover:opacity-100 transition-opacity z-0"
+      />
+      <div className="absolute top-2 right-2 bg-void-black/80 text-neon-crimson font-label-caps text-[10px] px-2 py-1 border border-neon-crimson/50 clip-chip z-10">
+        {anime.averageScore ? (anime.averageScore / 10).toFixed(1) : "N/A"}
+      </div>
+      <div className="absolute inset-0 bg-linear-to-t from-void-black via-transparent to-transparent opacity-90 z-0" />
+      <div className="absolute bottom-0 left-0 w-full p-4 z-10">
+        <h3 className="font-headline-lg text-[16px] text-white leading-tight line-clamp-2 group-hover:text-cyber-cyan transition-colors">
+          {anime.title.english || anime.title.romaji}
+        </h3>
+        <span className="font-label-caps text-[10px] text-on-surface-variant mt-1 inline-block">
+          {anime.format || "TV"}
+        </span>
+      </div>
+    </Link>
+  );
 
   return (
     <div className="flex flex-col min-h-screen">
       {/* Hero Section via AniList Banners */}
-      {heroAnimeList && <HeroCarousel animeList={heroAnimeList} />}
+      {heroAnimeList.length > 0 ? (
+        <HeroCarousel animeList={heroAnimeList} />
+      ) : isHeroError ? (
+        <div
+          role="alert"
+          className="flex h-125 w-full flex-col items-center justify-center gap-4 bg-surface-container px-6 text-center md:h-179"
+        >
+          <p className="font-label-caps text-sm tracking-widest text-on-surface-variant">
+            Featured anime could not be loaded.
+          </p>
+          <button
+            type="button"
+            onClick={() => void refetchHero()}
+            className="clip-chip border border-neon-crimson/60 px-4 py-2 font-label-caps text-xs text-neon-crimson transition-colors hover:bg-neon-crimson hover:text-void-black"
+          >
+            Try again
+          </button>
+        </div>
+      ) : (
+        <div
+          aria-hidden="true"
+          className="h-125 w-full bg-void-black md:h-179"
+          style={{
+            backgroundImage:
+              "radial-gradient(ellipse at 70% 35%, rgba(0, 240, 255, 0.1), transparent 38%), radial-gradient(ellipse at 22% 78%, rgba(255, 0, 60, 0.1), transparent 42%), linear-gradient(180deg, #0b0b10, #020204)",
+          }}
+        />
+      )}
 
       <div className="flex-1 space-y-12 py-12">
         {/* Continue Watching Section */}
@@ -76,6 +119,7 @@ export default function HomeClient({
                       src={item.image_url} 
                       alt={item.title} 
                       fill 
+                      loading={idx === 0 ? "eager" : "lazy"}
                       className="object-cover opacity-60 group-hover:opacity-100 transition-opacity z-0"
                     />
                     <div className="absolute inset-0 bg-linear-to-t from-void-black via-void-black/40 to-transparent z-0" />
@@ -154,6 +198,7 @@ export default function HomeClient({
                   src={anime.coverImage.extraLarge} 
                   alt={anime.title.english || anime.title.romaji || ""} 
                   fill 
+                  loading={idx === 0 ? "eager" : "lazy"}
                   className="absolute inset-0 object-cover z-0"
                 />
                 <div className="absolute top-0 left-0 bg-neon-crimson text-white font-label-caps text-sm font-bold px-3 py-1 z-10 clip-chip shadow-[0_0_10px_rgba(255,0,60,0.5)]">
@@ -288,29 +333,14 @@ export default function HomeClient({
                   Recent Releases
                 </h2>
               </div>
-              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-gutter">
-                {recentEpisodes.map((anime, idx) => (
-                  <Link key={`recent-${anime.idMal || anime.id}-${idx}`} href={`/anime/${anime.idMal}`} className="relative aspect-3/4 bg-surface-container rounded-none overflow-hidden group border border-transparent hover:scale-[1.02] hover:border-cyber-cyan transition-all duration-300 block clip-corner">
-                    <Image 
-                      src={anime.coverImage.extraLarge} 
-                      alt={anime.title.english || anime.title.romaji || ""} 
-                      fill 
-                      className="absolute inset-0 object-cover opacity-80 group-hover:opacity-100 transition-opacity z-0"
-                    />
-                    <div className="absolute top-2 right-2 bg-void-black/80 text-neon-crimson font-label-caps text-[10px] px-2 py-1 border border-neon-crimson/50 clip-chip z-10">
-                      {anime.averageScore ? (anime.averageScore / 10).toFixed(1) : "N/A"}
-                    </div>
-                    <div className="absolute inset-0 bg-linear-to-t from-void-black via-transparent to-transparent opacity-90 z-0" />
-                    <div className="absolute bottom-0 left-0 w-full p-4 z-10">
-                      <h3 className="font-headline-lg text-[16px] text-white leading-tight line-clamp-2 group-hover:text-cyber-cyan transition-colors">
-                        {anime.title.english || anime.title.romaji}
-                      </h3>
-                      <span className="font-label-caps text-[10px] text-on-surface-variant mt-1 inline-block">
-                        {anime.format || 'TV'}
-                      </span>
-                    </div>
-                  </Link>
-                ))}
+              <div className="grid grid-cols-2 gap-gutter md:hidden">
+                {recentEpisodes.slice(0, 16).map(renderRecentCard)}
+              </div>
+              <div className="hidden grid-cols-3 gap-gutter md:grid lg:hidden">
+                {recentEpisodes.slice(0, 15).map(renderRecentCard)}
+              </div>
+              <div className="hidden grid-cols-5 gap-gutter lg:grid">
+                {recentEpisodes.slice(0, 15).map(renderRecentCard)}
               </div>
             </>
           )}

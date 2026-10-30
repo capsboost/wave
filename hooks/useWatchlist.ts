@@ -17,14 +17,15 @@ export function useWatchlist() {
 
   const queryKey = ["watchlist", userId];
 
-  const { data: items = [], isLoading } = useQuery<WatchlistItem[]>({
+  const { data: items = [], isLoading, isError, refetch } = useQuery<WatchlistItem[]>({
     queryKey,
     queryFn: async () => {
       if (!userId) return [];
       const res = await fetch("/api/watchlist");
-      if (!res.ok) return [];
+      if (!res.ok) throw new Error("Failed to load watchlist");
       const data = await res.json();
-      return (data.items || []) as WatchlistItem[];
+      if (!Array.isArray(data.items)) throw new Error("Invalid watchlist response");
+      return data.items as WatchlistItem[];
     },
     enabled: !!userId,
     staleTime: 5 * 60 * 1000, // 5 minutes fresh
@@ -83,6 +84,8 @@ export function useWatchlist() {
     isInWatchlist: (animeId: string | number) => watchlistSet.has(String(animeId)),
     toggleWatchlist: (animeId: string | number) => toggleMutation.mutate(String(animeId)),
     isLoading,
+    isError,
+    refetch,
     isToggling: toggleMutation.isPending,
   };
 }

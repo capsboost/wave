@@ -22,11 +22,24 @@ export function HeroCarousel({ animeList }: HeroCarouselProps) {
 
   // Auto-slide logic
   React.useEffect(() => {
-    if (!animeList || animeList.length === 0) return;
-    const interval = setInterval(() => {
-      setActiveIndex((prev) => (prev + 1) % animeList.length);
-    }, slideDuration);
-    return () => clearInterval(interval);
+    if (!animeList || animeList.length < 2) return;
+    const motionPreference = window.matchMedia("(prefers-reduced-motion: reduce)");
+    let interval: ReturnType<typeof setInterval> | undefined;
+    const startAutoplay = () => {
+      if (interval) clearInterval(interval);
+      if (!motionPreference.matches) {
+        interval = setInterval(() => {
+          setActiveIndex((prev) => (prev + 1) % animeList.length);
+        }, slideDuration);
+      }
+    };
+
+    startAutoplay();
+    motionPreference.addEventListener("change", startAutoplay);
+    return () => {
+      if (interval) clearInterval(interval);
+      motionPreference.removeEventListener("change", startAutoplay);
+    };
   }, [animeList]);
 
   // Touch handlers for lightweight swipe detection
@@ -86,7 +99,7 @@ export function HeroCarousel({ animeList }: HeroCarouselProps) {
                 alt={anime.title.english || anime.title.romaji || "Anime"}
                 fill
                 className={`object-cover opacity-60 ${isActive ? "animate-ken-burns" : ""}`}
-                priority={index === 0}
+                loading={isActive ? "eager" : "lazy"}
               />
               <div className="absolute inset-0 bg-linear-to-t from-void-black via-void-black/70 to-transparent z-0" />
               <div className="absolute inset-0 bg-linear-to-r from-void-black via-void-black/50 to-transparent z-0" />
@@ -157,8 +170,9 @@ export function HeroCarousel({ animeList }: HeroCarouselProps) {
       })}
 
       {/* Navigation Controls */}
-      <div className="absolute bottom-8 right-margin-desktop flex gap-4 z-20 opacity-0 group-hover:opacity-100 transition-opacity duration-300" role="region" aria-label="Hero Carousel Navigation">
+      <div className="absolute bottom-8 right-margin-mobile md:right-margin-desktop flex gap-2 sm:gap-4 z-20 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity duration-300" role="region" aria-label="Hero Carousel Navigation">
         <button 
+          type="button"
           onClick={scrollPrev}
           aria-label="Previous slide"
           className="relative bg-surface-glass border border-outline-variant hover:border-cyber-cyan text-white hover:text-cyber-cyan rounded-none h-12 w-12 flex items-center justify-center clip-corner transition-colors cursor-pointer"
@@ -166,6 +180,7 @@ export function HeroCarousel({ animeList }: HeroCarouselProps) {
           <ChevronLeft className="w-6 h-6" />
         </button>
         <button 
+          type="button"
           onClick={scrollNext}
           aria-label="Next slide"
           className="relative bg-surface-glass border border-outline-variant hover:border-cyber-cyan text-white hover:text-cyber-cyan rounded-none h-12 w-12 flex items-center justify-center clip-corner transition-colors cursor-pointer"
