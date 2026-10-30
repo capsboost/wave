@@ -54,6 +54,43 @@ function getCleanDescription(description?: string | null): string {
   return description.slice(0, sourceIndex).replace(/<br\s*\/?>\s*$/i, '');
 }
 
+function truncateDescription(description: string, maxCharacters = 500): string {
+  let characters = 0;
+  let truncated = false;
+  const openTags: string[] = [];
+  const output: string[] = [];
+
+  for (const token of description.match(/<[^>]+>|[^<]+/g) ?? []) {
+    if (token.startsWith("<")) {
+      output.push(token);
+      const closingTag = token.match(/^<\s*\/\s*([a-z0-9]+)/i);
+      const openingTag = token.match(/^<\s*([a-z0-9]+)/i);
+
+      if (closingTag) {
+        const index = openTags.lastIndexOf(closingTag[1].toLowerCase());
+        if (index !== -1) openTags.splice(index, 1);
+      } else if (openingTag && !/\/\s*>$/.test(token) && !/^(br|hr|img|meta|input)$/i.test(openingTag[1])) {
+        openTags.push(openingTag[1].toLowerCase());
+      }
+      continue;
+    }
+
+    const remaining = maxCharacters - characters;
+    if (token.length <= remaining) {
+      output.push(token);
+      characters += token.length;
+      continue;
+    }
+
+    output.push(`${token.slice(0, Math.max(0, remaining)).trimEnd()}…`);
+    truncated = true;
+    break;
+  }
+
+  if (!truncated) return description;
+  return `${output.join("")}${openTags.reverse().map((tag) => `</${tag}>`).join("")}`;
+}
+
 interface AnimeClientProps {
   readonly id: string;
 }
@@ -169,6 +206,10 @@ export default function AnimeClient({ id }: AnimeClientProps) {
   const cleanDescription = useMemo(
     () => (anime ? getCleanDescription(anime.description) : ''),
     [anime]
+  );
+  const synopsis = useMemo(
+    () => truncateDescription(cleanDescription),
+    [cleanDescription]
   );
   const dubAvailabilityUnknown = counts !== null && counts.is_dub === null;
   const dubUnavailable = counts !== null && typeof counts.is_dub === "number" && counts.is_dub <= 0;
@@ -313,7 +354,7 @@ export default function AnimeClient({ id }: AnimeClientProps) {
             <h2 className="mb-4 font-headline-xl text-xl tracking-wider text-on-surface">SYNOPSIS</h2>
             <div
               className="text-left font-body-md text-base leading-7 text-on-surface-variant md:text-justify md:text-lg md:leading-8"
-              dangerouslySetInnerHTML={{ __html: cleanDescription }}
+              dangerouslySetInnerHTML={{ __html: synopsis }}
             />
           </div>
         </section>
