@@ -78,7 +78,7 @@ export function Navbar() {
   };
 
   return (
-    <nav className="fixed top-0 w-full z-50 bg-surface-glass backdrop-blur-xl border-b border-neon-crimson/25 shadow-[0_4px_24px_rgba(0,0,0,0.35)]">
+    <nav className="fixed top-0 w-full z-50 bg-surface-glass/95 backdrop-blur-md border-b border-neon-crimson/20 shadow-[0_2px_16px_rgba(0,0,0,0.3)]">
       <div className="flex items-center gap-2 px-margin-mobile sm:px-6 lg:px-margin-desktop py-2 md:py-3 w-full max-w-full">
         <div className="flex min-w-0 flex-1 items-center gap-3 lg:gap-gutter">
           <Link
@@ -89,7 +89,7 @@ export function Navbar() {
             <WaveLogo variant="full" size="md" />
           </Link>
           <div className="hidden min-w-0 flex-1 xl:block">
-            <div className="flex items-center gap-3 lg:gap-stack-md font-label-caps text-[10px] lg:text-label-caps uppercase">
+            <div className="flex items-center gap-3 lg:gap-stack-md font-label-caps text-xs lg:text-label-caps uppercase">
             <Link
               href="/"
               aria-current={pathname === "/" ? "page" : undefined}
@@ -184,7 +184,7 @@ export function Navbar() {
                             <h4 className="font-headline-lg text-[14px] text-on-surface truncate group-hover:text-neon-crimson transition-colors">
                               {anime.title.english || anime.title.romaji}
                             </h4>
-                            <p className="font-label-caps text-[10px] text-on-surface-variant mt-1">
+                            <p className="font-label-caps text-xs text-on-surface-variant mt-1">
                               {anime.format || 'TV'} • {anime.seasonYear || 'N/A'}
                             </p>
                           </div>
@@ -303,7 +303,7 @@ export function Navbar() {
                 <div className="absolute top-full right-0 mt-4 w-48 bg-surface-container border border-outline-variant/30 shadow-[0_10px_30px_rgba(0,0,0,0.8)] clip-corner flex flex-col z-50">
                   <div className="px-4 py-3 border-b border-outline-variant/20">
                     <p className="font-headline-md text-sm text-on-surface truncate">{session.user.name}</p>
-                    <p className="font-label-caps text-[10px] text-on-surface-variant truncate">{session.user.email}</p>
+                    <p className="font-label-caps text-xs text-on-surface-variant truncate">{session.user.email}</p>
                   </div>
                   <Link href="/profile" onClick={() => setIsProfileMenuOpen(false)} className="px-4 py-3 text-sm font-label-caps text-on-surface hover:bg-surface-glass transition-colors">Profile & Watchlist</Link>
                   <button onClick={() => { signOut(); setIsProfileMenuOpen(false); }} className="px-4 py-3 text-sm font-label-caps text-neon-crimson hover:bg-neon-crimson/10 transition-colors text-left border-t border-outline-variant/20">Log Out</button>
@@ -326,42 +326,35 @@ export function Navbar() {
         <div
           id="mobile-navigation-menu"
           aria-label="Mobile navigation"
-          className="xl:hidden absolute top-full left-0 flex min-h-[calc(100dvh-4.5rem)] max-h-[calc(100dvh-4.5rem)] w-full flex-col overflow-y-auto overscroll-contain border-b border-neon-crimson/50 bg-void-black/98 backdrop-blur-2xl shadow-[0_20px_40px_rgba(255,0,60,0.15)] z-40 animate-in slide-in-from-top-2 duration-300"
+          className="xl:hidden absolute top-full left-0 flex h-[calc(100dvh_-_57px)] max-h-[calc(100dvh_-_57px)] w-full flex-col overflow-y-auto overscroll-contain border-b border-neon-crimson/50 bg-void-black shadow-[0_20px_40px_rgba(255,0,60,0.15)] z-40 animate-in slide-in-from-top-2 duration-300"
         >
-          <div className="flex flex-1 flex-col p-margin-mobile">
-            <div className="mb-4 flex items-center justify-between border-b border-outline-variant/30 pb-3">
-              <span className="font-label-caps text-xs tracking-[0.24em] text-on-surface-variant">
-                Navigation
-              </span>
-              <span className="font-label-caps text-[10px] tracking-widest text-cyber-cyan/70">
-                WAVE // MOBILE
-              </span>
-            </div>
+          <div className="box-border flex h-full min-h-0 flex-1 flex-col p-margin-mobile">
+            <div className="flex flex-1 flex-col justify-center gap-5">
             <Link
               href="/"
               onClick={() => setIsMobileMenuOpen(false)}
-              className={`flex min-h-12 items-center px-4 py-3 font-label-caps uppercase clip-chip transition-all ${pathname === "/" ? "text-neon-crimson bg-neon-crimson/10 border-l-2 border-neon-crimson" : "text-on-surface bg-surface-container/40 hover:bg-surface-glass"}`}
+              className={`flex min-h-12 items-center justify-center px-4 py-2 font-headline-lg text-2xl font-semibold uppercase transition-colors ${pathname === "/" ? "text-white" : "text-on-surface-variant hover:text-cyber-cyan"}`}
             >
               Home
             </Link>
             <Link
               href="/schedule"
               onClick={() => setIsMobileMenuOpen(false)}
-              className={`flex min-h-12 items-center px-4 py-3 font-label-caps uppercase clip-chip transition-all ${pathname === "/schedule" ? "text-neon-crimson bg-neon-crimson/10 border-l-2 border-neon-crimson" : "text-on-surface bg-surface-container/40 hover:bg-surface-glass"}`}
+              className={`flex min-h-12 items-center justify-center px-4 py-2 font-headline-lg text-2xl font-semibold uppercase transition-colors ${pathname === "/schedule" ? "text-white" : "text-on-surface-variant hover:text-cyber-cyan"}`}
             >
               Schedule
             </Link>
             <Link
               href="/search"
               onClick={() => setIsMobileMenuOpen(false)}
-              className={`flex min-h-12 items-center px-4 py-3 font-label-caps uppercase clip-chip transition-all ${pathname === "/search" ? "text-neon-crimson bg-neon-crimson/10 border-l-2 border-neon-crimson" : "text-on-surface bg-surface-container/40 hover:bg-surface-glass"}`}
+              className={`flex min-h-12 items-center justify-center px-4 py-2 font-headline-lg text-2xl font-semibold uppercase transition-colors ${pathname === "/search" ? "text-white" : "text-on-surface-variant hover:text-cyber-cyan"}`}
             >
               Catalog
             </Link>
             <Link
               href="/continue-watching"
               onClick={() => setIsMobileMenuOpen(false)}
-              className={`flex min-h-12 items-center px-4 py-3 font-label-caps uppercase clip-chip transition-all ${pathname === "/continue-watching" ? "text-neon-crimson bg-neon-crimson/10 border-l-2 border-neon-crimson" : "text-on-surface bg-surface-container/40 hover:bg-surface-glass"}`}
+              className={`flex min-h-12 items-center justify-center px-4 py-2 font-headline-lg text-2xl font-semibold uppercase transition-colors ${pathname === "/continue-watching" ? "text-white" : "text-on-surface-variant hover:text-cyber-cyan"}`}
             >
               Recents
             </Link>
@@ -370,7 +363,7 @@ export function Navbar() {
               target="_blank"
               rel="noopener noreferrer"
               onClick={() => setIsMobileMenuOpen(false)}
-              className="flex min-h-12 items-center px-4 py-3 font-label-caps uppercase clip-chip text-on-surface bg-surface-container/40 hover:bg-surface-glass transition-all"
+              className="flex min-h-12 items-center justify-center px-4 py-2 font-headline-lg text-2xl font-semibold uppercase text-on-surface-variant hover:text-cyber-cyan transition-colors"
             >
               Movies & TV Shows
             </a>
@@ -379,10 +372,11 @@ export function Navbar() {
               target="_blank"
               rel="noopener noreferrer"
               onClick={() => setIsMobileMenuOpen(false)}
-              className="flex min-h-12 items-center px-4 py-3 font-label-caps uppercase clip-chip text-on-surface bg-surface-container/40 hover:bg-surface-glass transition-all"
+              className="flex min-h-12 items-center justify-center px-4 py-2 font-headline-lg text-2xl font-semibold uppercase text-on-surface-variant hover:text-cyber-cyan transition-colors"
             >
               Sports
             </a>
+            </div>
           </div>
           
           {/* Mobile Auth */}
@@ -397,7 +391,7 @@ export function Navbar() {
                   </div>
                   <div>
                     <p className="font-headline-md text-sm text-on-surface truncate">{session.user.name}</p>
-                    <p className="font-label-caps text-[10px] text-on-surface-variant truncate">{session.user.email}</p>
+                    <p className="font-label-caps text-xs text-on-surface-variant truncate">{session.user.email}</p>
                   </div>
                 </div>
                 <Link 
@@ -431,12 +425,12 @@ export function Navbar() {
 
       {/* Mobile Search Bar Overlay */}
       {isMobileSearchOpen && (
-        <div id="mobile-search-panel" className="xl:hidden absolute top-full left-0 w-full bg-surface-container/95 backdrop-blur-xl border-b border-outline-variant/30 p-4 shadow-[0_10px_30px_rgba(0,0,0,0.8)] z-40">
+        <div id="mobile-search-panel" className="xl:hidden absolute top-full left-0 w-full border-b border-neon-crimson/30 bg-void-black px-margin-mobile py-3 z-40">
           <form 
             onSubmit={handleSearch}
-            className="flex items-center relative border border-outline-variant focus-within:border-neon-crimson transition-colors bg-surface-glass w-full mb-2"
+            className="flex items-center relative w-full border-b border-outline-variant focus-within:border-neon-crimson transition-colors"
           >
-            <Search className="w-4 h-4 text-on-surface-variant ml-3" />
+            <Search className="w-4 h-4 text-on-surface-variant" />
             <input
               aria-label="Search anime"
               type="text"
@@ -446,15 +440,13 @@ export function Navbar() {
               className="bg-transparent !outline-none border-none text-on-surface font-label-caps text-label-caps w-full py-3 px-3 placeholder:text-on-surface-variant"
               autoFocus
             />
-          </form>
-          <div className="flex justify-end">
-            <button 
-              onClick={handleSearch}
-              className="px-4 py-2 bg-neon-crimson text-void-black font-label-caps text-[12px] font-bold"
+            <button
+              type="submit"
+              className="px-2 py-2 font-label-caps text-xs text-neon-crimson transition-colors hover:text-white"
             >
               SEARCH
             </button>
-          </div>
+          </form>
         </div>
       )}
     </nav>

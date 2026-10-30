@@ -443,7 +443,7 @@ export default function AnimeClient({ id }: AnimeClientProps) {
             </div>
           </div>
           {(dubAvailabilityUnknown || dubUnavailable) && (
-            <p role="status" className="mt-2 text-right font-label-caps text-[10px] text-on-surface-variant">
+            <p role="status" className="mt-2 text-right font-label-caps text-xs text-on-surface-variant">
               {dubAvailabilityUnknown
                 ? "DUB availability could not be confirmed for this title."
                 : "DUB audio is not listed for this title."}

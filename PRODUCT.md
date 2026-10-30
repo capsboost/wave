@@ -4,15 +4,15 @@
 
 ## Platform
 
-web
+adaptive
 
 ## Users
 
-Anime enthusiasts, casual viewers, and community members who want a responsive, distraction-free environment to discover, track, and stream anime episodes, engage in episode comments, receive notifications, and manage watch history across devices. Also includes site administrators who monitor analytics and broadcast system updates.
+Anime enthusiasts and casual viewers discovering, tracking, and watching anime across desktop and mobile browsers. Community members also engage in episode comments, receive notifications, and manage watch history across devices; site administrators monitor analytics and broadcast system updates.
 
 ## Product Purpose
 
-Wave Anime provides a high-performance, low-latency web application for discovering, tracking, and watching anime. It eliminates typical slow API load times by caching synchronized streaming data in serverless PostgreSQL while providing automated intro/outro skipping, watch progress sync, and community interactions.
+Wave Anime provides a fast anime discovery, tracking, and streaming experience with cached data, watch progress, community features, and a cyberpunk interface. It reduces typical slow API load times by caching synchronized streaming data in serverless PostgreSQL while providing automated intro/outro skipping and cross-session watch-state sync.
 
 ## Positioning
 
@@ -34,6 +34,8 @@ Web application used on desktop and mobile browsers. Primary activities include 
 - **Constraints**:
   - Heavy background API sync logic must run outside Next.js on the Render Express backend to adhere to Vercel Hobby serverless timeouts (10-60s limit).
   - Anikoto API rate limits (60 requests / 120s) require strict pagination and delays in background tasks.
+  - Keep Vercel Hobby request work lightweight while preserving backend account and watch-state behavior.
+  - Maintain clear, standard terminology across responsive desktop and mobile experiences.
 
 ## Brand Commitments
 

@@ -35,30 +35,33 @@ export function useTrendingAnime(limit = 15, page = 1, initialData?: AniListAnim
   });
 }
 
-export function useRecentEpisodes(limit = 20) {
+export function useRecentEpisodes(limit = 20, enabled = true) {
   return useQuery({
     queryKey: ["anime", "recent", limit],
     queryFn: () => anilistApi.getRecentReleases(limit),
     staleTime: 60 * 60 * 1000, // 1 hour
     retry: 1,
+    enabled,
   });
 }
 
-export function useTopThisWeek(limit = 9) {
+export function useTopThisWeek(limit = 9, enabled = true) {
   return useQuery({
     queryKey: ["anime", "top-this-week", limit],
     queryFn: () => anilistApi.getTopThisWeek(limit),
     staleTime: 60 * 60 * 1000, // 1 hour
     retry: 1,
+    enabled,
   });
 }
 
-export function useSchedule(limit = 15) {
+export function useSchedule(limit = 15, enabled = true) {
   return useQuery({
     queryKey: ["anime", "schedule", limit],
     queryFn: () => anilistApi.getAiringSchedule(limit),
     staleTime: 60 * 60 * 1000, // 1 hour
     retry: 1,
+    enabled,
   });
 }
 

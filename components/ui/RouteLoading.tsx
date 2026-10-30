@@ -31,7 +31,7 @@ export function RouteLoading({ message, compact = false }: RouteLoadingProps) {
           className="relative z-10 animate-pulse [animation-duration:1.8s]"
         />
       </div>
-      <p className="font-label-caps text-xs tracking-[0.24em] text-on-surface-variant sm:text-sm">
+      <p className="font-label-caps text-xs tracking-[0.24em] text-cyber-cyan/90 sm:text-sm">
         {message}
       </p>
     </div>

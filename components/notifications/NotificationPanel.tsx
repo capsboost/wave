@@ -29,7 +29,7 @@ export function NotificationPanel({ onClose }: NotificationPanelProps) {
         {session && unreadCount > 0 && (
           <button 
             onClick={() => markAllAsRead()}
-            className="text-[10px] font-label-caps text-neon-crimson hover:text-white transition-colors cursor-pointer"
+            className="text-xs font-label-caps text-neon-crimson hover:text-white transition-colors cursor-pointer"
           >
             Mark All Read
           </button>
@@ -78,7 +78,7 @@ export function NotificationPanel({ onClose }: NotificationPanelProps) {
                   <span className={`font-headline-sm text-sm truncate ${!item.read ? 'text-white font-bold' : 'text-on-surface'}`}>
                     {item.title}
                   </span>
-                  <span className="font-label-caps text-[10px] text-on-surface-variant shrink-0 mt-0.5">
+                  <span className="font-label-caps text-xs text-on-surface-variant shrink-0 mt-0.5">
                     {timeAgo(item.createdAt)}
                   </span>
                 </div>
@@ -86,7 +86,7 @@ export function NotificationPanel({ onClose }: NotificationPanelProps) {
                   {item.message}
                 </p>
                 {item.linkLabel && (
-                  <span className="text-[10px] font-label-caps text-cyber-cyan mt-2 uppercase tracking-wider group-hover:text-neon-crimson transition-colors">
+                  <span className="text-xs font-label-caps text-cyber-cyan mt-2 uppercase tracking-wider group-hover:text-neon-crimson transition-colors">
                     {item.linkLabel}
                   </span>
                 )}

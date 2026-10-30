@@ -182,19 +182,19 @@ export default function ScheduleClient() {
                       
                       {anime.nextAiringEpisode ? (
                         <div className="mt-auto">
-                          <span className={`inline-block border px-2 py-1 font-label-caps text-[10px] mb-1 clip-chip ${theme.chipBg} ${theme.chipText} ${theme.chipBorder}`}>
+                          <span className={`inline-block border px-2 py-1 font-label-caps text-xs mb-1 clip-chip ${theme.chipBg} ${theme.chipText} ${theme.chipBorder}`}>
                             EP {anime.nextAiringEpisode.episode}
                           </span>
                           <p className="text-on-surface-variant text-xs font-label-caps">
                             {getCountdown(anime.nextAiringEpisode.airingAt)}
                           </p>
-                          <p className="text-on-surface-variant/60 text-[10px] font-label-caps mt-0.5">
+                          <p className="text-on-surface-variant/60 text-xs font-label-caps mt-0.5">
                             {formatAiringDate(anime.nextAiringEpisode.airingAt)}
                           </p>
                         </div>
                       ) : (
                         <div className="mt-auto">
-                          <span className="inline-block bg-surface-container-high text-on-surface-variant border border-outline-variant px-2 py-1 font-label-caps text-[10px] clip-chip">
+                          <span className="inline-block bg-surface-container-high text-on-surface-variant border border-outline-variant px-2 py-1 font-label-caps text-xs clip-chip">
                             Airing
                           </span>
                         </div>

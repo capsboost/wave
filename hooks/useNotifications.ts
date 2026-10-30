@@ -29,6 +29,7 @@ export function useNotifications() {
     refetchIntervalInBackground: false, 
     refetchOnWindowFocus: false, 
     staleTime: session?.user ? 5 * 60 * 1000 : 60 * 60 * 1000, // 5m for users, 1h for guests 
+    enabled: !!session?.user,
   });
 
   const markAsReadMutation = useMutation({

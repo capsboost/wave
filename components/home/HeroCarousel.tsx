@@ -76,7 +76,7 @@ export function HeroCarousel({ animeList }: HeroCarouselProps) {
 
   return (
     <div 
-      className="relative w-full h-179 min-h-125 overflow-hidden group bg-void-black"
+      className="relative mt-[57px] w-full h-179 min-h-125 overflow-hidden group bg-void-black md:mt-18"
       onTouchStart={handleTouchStart}
       onTouchMove={handleTouchMove}
       onTouchEnd={handleTouchEnd}
@@ -106,8 +106,7 @@ export function HeroCarousel({ animeList }: HeroCarouselProps) {
             </div>
 
             {/* Breathing Glow Effects */}
-            <div className="hidden md:block absolute top-1/4 left-1/4 w-96 h-96 bg-neon-crimson/20 rounded-full blur-[120px] z-0 pointer-events-none animate-breathe" />
-            <div className="hidden md:block absolute bottom-0 right-1/4 w-125 h-125 bg-cyber-cyan/10 rounded-full blur-[150px] z-0 pointer-events-none animate-breathe" style={{ animationDelay: '2s' }} />
+            <div className="hidden md:block absolute top-1/4 left-1/4 w-96 h-96 bg-neon-crimson/10 rounded-full blur-[120px] z-0 pointer-events-none" />
 
             {/* Content with Sequential Staggers */}
             <div className="relative z-10 px-margin-mobile md:px-margin-desktop w-full max-w-7xl h-full flex flex-col justify-end pb-margin-tablet md:pb-margin-desktop">
@@ -120,7 +119,7 @@ export function HeroCarousel({ animeList }: HeroCarouselProps) {
               </div>
               
               <h1 
-                className={`font-display-lg text-display-lg-mobile md:text-display-lg text-white mb-stack-md leading-tight text-shadow-glow line-clamp-2 max-w-4xl transition-all duration-700 transform ${isActive ? "translate-y-0 opacity-100" : "translate-y-4 opacity-0"}`}
+                className={`font-display-lg text-display-lg-mobile md:text-display-lg text-white mb-stack-md leading-tight line-clamp-2 max-w-4xl transition-all duration-500 transform ${isActive ? "translate-y-0 opacity-100" : "translate-y-2 opacity-0"}`}
                 style={{ transitionDelay: '200ms' }}
               >
                 {anime.title.english || anime.title.romaji}

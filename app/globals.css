@@ -10,6 +10,7 @@
   --font-sans: var(--font-sans);
   --font-mono: var(--font-geist-mono);
   --font-heading: var(--font-sans);
+  --font-body: var(--font-body);
 
   --color-neon-crimson: #FF003C;
   --color-cyber-cyan: #00F0FF;
@@ -196,7 +197,7 @@
 
 @layer base {
   * {
-    @apply border-border outline-ring/50;
+    @apply border-border;
   }
   body {
     @apply bg-background text-foreground antialiased selection:bg-neon-crimson selection:text-white;
@@ -210,6 +211,21 @@ input:disabled,
 select:disabled,
 textarea:disabled {
   cursor: not-allowed;
+}
+
+button:focus-visible,
+a:focus-visible {
+  outline: none;
+  text-decoration: underline;
+  text-decoration-color: var(--primary);
+  text-decoration-thickness: 2px;
+  text-underline-offset: 4px;
+}
+
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible {
+  outline: none;
 }
 
 /* Touch device target optimization */
@@ -232,8 +248,8 @@ textarea:disabled {
 
 /* Custom Global Scrollbar */
 ::-webkit-scrollbar {
-  width: 10px;
-  height: 10px;
+  width: 8px;
+  height: 8px;
 }
 
 ::-webkit-scrollbar-track {
@@ -241,18 +257,18 @@ textarea:disabled {
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #FF003C;
+  background: #9f2345;
   border: 2px solid var(--background);
   border-radius: 0;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #ff3366; /* slightly brighter crimson on hover */
+  background: #c73559;
 }
 
 html {
   scrollbar-width: thin;
-  scrollbar-color: #FF003C var(--background);
+  scrollbar-color: #9f2345 var(--background);
   scroll-behavior: smooth;
 }
 

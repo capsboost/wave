@@ -242,19 +242,19 @@ export default function ProfileClient() {
                               {item.title}
                             </Link>
                             <div className="flex items-center gap-2 mt-1">
-                              <span className="font-label-caps text-[10px] text-on-surface-variant">EP {item.episode}</span>
+                              <span className="font-label-caps text-xs text-on-surface-variant">EP {item.episode}</span>
                               {item.time != null && item.duration != null && (
                                 <>
                                   <span className="text-outline-variant">•</span>
-                                  <span className="font-label-caps text-[10px] text-on-surface-variant">{formatTime(item.time)} / {formatTime(item.duration)}</span>
+                                  <span className="font-label-caps text-xs text-on-surface-variant">{formatTime(item.time)} / {formatTime(item.duration)}</span>
                                   <span className="text-outline-variant">•</span>
-                                  <span className="font-label-caps text-[10px] text-cyber-cyan">{pct}%</span>
+                                  <span className="font-label-caps text-xs text-cyber-cyan">{pct}%</span>
                                 </>
                               )}
                               {item.language && (
                                 <>
                                   <span className="text-outline-variant">•</span>
-                                  <span className="font-label-caps text-[10px] text-on-surface-variant uppercase">{item.language}</span>
+                                  <span className="font-label-caps text-xs text-on-surface-variant uppercase">{item.language}</span>
                                 </>
                               )}
                             </div>

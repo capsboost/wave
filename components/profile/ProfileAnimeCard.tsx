@@ -21,7 +21,7 @@ export function ProfileAnimeCard({ animeId, dateAdded, anime: prefetchedAnime }:
         className="aspect-3/4 bg-surface-container/50 clip-corner border border-outline-variant/30 flex flex-col justify-end p-4"
       >
         <span className="font-label-caps text-xs text-on-surface-variant">Anime details unavailable</span>
-        <span className="font-label-caps text-[10px] text-on-surface-variant mt-1">
+        <span className="font-label-caps text-xs text-on-surface-variant mt-1">
           Added: {new Date(dateAdded).toLocaleDateString()}
         </span>
       </Link>
@@ -43,7 +43,7 @@ export function ProfileAnimeCard({ animeId, dateAdded, anime: prefetchedAnime }:
         </Link>
         
         <div className="absolute top-2 right-2 z-10 flex flex-col items-end gap-2">
-          <div className="bg-void-black/80 text-neon-crimson font-label-caps text-[10px] px-2 py-1 border border-neon-crimson/50 clip-chip">
+          <div className="bg-void-black/80 text-neon-crimson font-label-caps text-xs px-2 py-1 border border-neon-crimson/50 clip-chip">
             {anime.averageScore ? (anime.averageScore / 10).toFixed(1) : "N/A"}
           </div>
           <WatchlistButton animeId={animeId} initialInList={true} showText={false} className="w-8 h-8 p-0" />
@@ -53,7 +53,7 @@ export function ProfileAnimeCard({ animeId, dateAdded, anime: prefetchedAnime }:
           <h3 className="font-headline-lg text-[16px] text-white leading-tight line-clamp-2 group-hover:text-cyber-cyan transition-colors drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)]">
             {anime.title?.english || anime.title?.romaji}
           </h3>
-          <span className="font-label-caps text-[10px] text-on-surface-variant mt-1 block">
+          <span className="font-label-caps text-xs text-on-surface-variant mt-1 block">
             Added: {new Date(dateAdded).toLocaleDateString()}
           </span>
         </Link>

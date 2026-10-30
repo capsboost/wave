@@ -6,6 +6,7 @@ import { Play, CalendarClock, ChevronLeft, ChevronRight } from "lucide-react";
 import { useWatchStore, getAnimeResumeInfo } from "@/store/useWatchStore";
 import { timeAgo } from "@/lib/timeAgo";
 import { useMounted } from "@/hooks/useMounted";
+import { useDeferredLoad } from "@/hooks/useDeferredLoad";
 import { HeroCarousel } from "@/components/home/HeroCarousel";
 import { useRef } from "react";
 import { useRecentEpisodes, useSchedule, useTopThisWeek, useTrendingAnime } from "@/hooks/useAnime";
@@ -22,9 +23,12 @@ export default function HomeClient({ initialHeroAnime = [] }: HomeClientProps) {
     refetch: refetchHero,
   } = useTrendingAnime(10, 1, initialHeroAnime);
   const { data: trendingAnime = [] } = useTrendingAnime(15, 2);
-  const { data: recentEpisodes = [] } = useRecentEpisodes(20);
-  const { data: topThisWeek = [] } = useTopThisWeek(9);
-  const { data: scheduleAnime = [] } = useSchedule(15);
+  const loadSchedule = useDeferredLoad(900);
+  const loadTopThisWeek = useDeferredLoad(1200);
+  const loadRecentEpisodes = useDeferredLoad(1500);
+  const { data: recentEpisodes = [] } = useRecentEpisodes(20, loadRecentEpisodes);
+  const { data: topThisWeek = [] } = useTopThisWeek(9, loadTopThisWeek);
+  const { data: scheduleAnime = [] } = useSchedule(15, loadSchedule);
 
   // Hydration safe store access
   const history = useWatchStore((state) => state.history);
@@ -42,14 +46,14 @@ export default function HomeClient({ initialHeroAnime = [] }: HomeClientProps) {
 
   const historyItems = Object.values(history).sort((a, b) => b.timestamp - a.timestamp).slice(0, 5);
   const renderRecentCard = (anime: (typeof recentEpisodes)[number], idx: number) => (
-    <Link key={`recent-${anime.idMal || anime.id}-${idx}`} href={`/anime/${anime.idMal}`} className="relative aspect-3/4 bg-surface-container rounded-none overflow-hidden group border border-transparent hover:scale-[1.02] hover:border-cyber-cyan transition-all duration-300 block clip-corner">
+    <Link key={`recent-${anime.idMal || anime.id}-${idx}`} href={`/anime/${anime.idMal}`} className="relative aspect-3/4 bg-surface-container rounded-none overflow-hidden group border border-transparent hover:border-cyber-cyan transition-colors duration-200 block clip-corner">
       <Image
         src={anime.coverImage.extraLarge}
         alt={anime.title.english || anime.title.romaji || ""}
         fill
         className="absolute inset-0 object-cover opacity-80 group-hover:opacity-100 transition-opacity z-0"
       />
-      <div className="absolute top-2 right-2 bg-void-black/80 text-neon-crimson font-label-caps text-[10px] px-2 py-1 border border-neon-crimson/50 clip-chip z-10">
+      <div className="absolute top-2 right-2 bg-void-black/80 text-neon-crimson font-label-caps text-xs px-2 py-1 border border-neon-crimson/50 clip-chip z-10">
         {anime.averageScore ? (anime.averageScore / 10).toFixed(1) : "N/A"}
       </div>
       <div className="absolute inset-0 bg-linear-to-t from-void-black via-transparent to-transparent opacity-90 z-0" />
@@ -57,7 +61,7 @@ export default function HomeClient({ initialHeroAnime = [] }: HomeClientProps) {
         <h3 className="font-headline-lg text-[16px] text-white leading-tight line-clamp-2 group-hover:text-cyber-cyan transition-colors">
           {anime.title.english || anime.title.romaji}
         </h3>
-        <span className="font-label-caps text-[10px] text-on-surface-variant mt-1 inline-block">
+        <span className="font-label-caps text-xs text-on-surface-variant mt-1 inline-block">
           {anime.format || "TV"}
         </span>
       </div>
@@ -72,7 +76,7 @@ export default function HomeClient({ initialHeroAnime = [] }: HomeClientProps) {
       ) : isHeroError ? (
         <div
           role="alert"
-          className="flex h-125 w-full flex-col items-center justify-center gap-4 bg-surface-container px-6 text-center md:h-179"
+          className="mt-[57px] flex h-125 w-full flex-col items-center justify-center gap-4 bg-surface-container px-6 text-center md:mt-18 md:h-179"
         >
           <p className="font-label-caps text-sm tracking-widest text-on-surface-variant">
             Featured anime could not be loaded.
@@ -88,7 +92,7 @@ export default function HomeClient({ initialHeroAnime = [] }: HomeClientProps) {
       ) : (
         <div
           aria-hidden="true"
-          className="h-125 w-full bg-void-black md:h-179"
+          className="mt-[57px] h-125 w-full bg-void-black md:mt-18 md:h-179"
           style={{
             backgroundImage:
               "radial-gradient(ellipse at 70% 35%, rgba(0, 240, 255, 0.1), transparent 38%), radial-gradient(ellipse at 22% 78%, rgba(255, 0, 60, 0.1), transparent 42%), linear-gradient(180deg, #0b0b10, #020204)",
@@ -146,7 +150,7 @@ export default function HomeClient({ initialHeroAnime = [] }: HomeClientProps) {
                             : `Episode ${targetEp}${progressPct > 0 ? ` (${progressPct}%)` : ""}`}
                         </span>
                         {item.timestamp && (
-                          <span className="text-[10px] text-outline-variant">
+                          <span className="text-xs text-on-surface-variant">
                             {timeAgo(item.timestamp)}
                           </span>
                         )}
@@ -196,9 +200,9 @@ export default function HomeClient({ initialHeroAnime = [] }: HomeClientProps) {
             </div>
           </div>
           
-          <div ref={trendingRef} className="flex overflow-x-auto gap-gutter pb-4 snap-x snap-mandatory hide-scrollbar scroll-smooth">
+          <div ref={trendingRef} className="flex overflow-x-auto gap-gutter px-1 md:px-2 pb-4 snap-x snap-mandatory hide-scrollbar scroll-smooth">
             {trendingAnime?.map((anime, idx) => (
-              <Link key={`trending-${anime.idMal || anime.id}-${idx}`} href={`/anime/${anime.idMal}`} className="relative shrink-0 w-50 md:w-62.5 aspect-2/3 bg-surface-container rounded-none overflow-hidden group snap-start border border-transparent hover:scale-[1.02] hover:border-neon-crimson hover:shadow-[0_0_20px_rgba(255,0,60,0.4)] transition-all duration-300 block clip-corner">
+              <Link key={`trending-${anime.idMal || anime.id}-${idx}`} href={`/anime/${anime.idMal}`} className="relative shrink-0 w-50 md:w-62.5 aspect-2/3 bg-surface-container rounded-none overflow-hidden group snap-start border border-transparent hover:border-neon-crimson transition-colors duration-200 block clip-corner">
                 <Image 
                   src={anime.coverImage.extraLarge} 
                   alt={anime.title.english || anime.title.romaji || ""} 
@@ -214,7 +218,7 @@ export default function HomeClient({ initialHeroAnime = [] }: HomeClientProps) {
                   <h3 className="font-headline-lg text-[18px] text-white leading-tight mb-1 truncate group-hover:text-neon-crimson transition-colors">
                     {anime.title.english || anime.title.romaji}
                   </h3>
-                  <div className="flex gap-2 text-cyber-cyan font-label-caps text-[10px] truncate">
+                  <div className="flex gap-2 text-cyber-cyan font-label-caps text-xs truncate">
                     {anime.genres.slice(0,2).map((g, i, arr) => (
                       <span key={g}>
                         {g}{i < arr.length - 1 && " • "}
@@ -235,13 +239,17 @@ export default function HomeClient({ initialHeroAnime = [] }: HomeClientProps) {
                 <CalendarClock className="text-data-purple w-6 h-6" /> Airing Now
               </h2>
               <div className="flex gap-2">
-                <button 
+                <button
+                  type="button"
+                  aria-label="Scroll airing anime left"
                   onClick={() => scroll(scheduleRef, 'left')}
                   className="bg-surface-container border border-outline-variant hover:border-data-purple hover:text-data-purple p-2 text-on-surface-variant transition-colors clip-corner"
                 >
                   <ChevronLeft className="w-5 h-5" />
                 </button>
-                <button 
+                <button
+                  type="button"
+                  aria-label="Scroll airing anime right"
                   onClick={() => scroll(scheduleRef, 'right')}
                   className="bg-surface-container border border-outline-variant hover:border-data-purple hover:text-data-purple p-2 text-on-surface-variant transition-colors clip-corner"
                 >
@@ -250,7 +258,7 @@ export default function HomeClient({ initialHeroAnime = [] }: HomeClientProps) {
               </div>
             </div>
             
-            <div ref={scheduleRef} className="flex overflow-x-auto gap-gutter pb-4 snap-x snap-mandatory hide-scrollbar scroll-smooth">
+            <div ref={scheduleRef} className="flex overflow-x-auto gap-gutter px-1 md:px-2 pb-4 snap-x snap-mandatory hide-scrollbar scroll-smooth">
               {scheduleAnime.map((anime, idx) => (
                 <Link key={`schedule-${anime.idMal || anime.id}-${idx}`} href={`/anime/${anime.idMal}`} className="relative shrink-0 w-70 h-24 bg-surface-container-low border border-outline-variant/30 flex items-center p-3 gap-4 group hover:border-data-purple hover:bg-surface-container transition-all snap-start clip-corner">
                   <div className="relative w-16 h-full shrink-0">
@@ -289,7 +297,7 @@ export default function HomeClient({ initialHeroAnime = [] }: HomeClientProps) {
                   <div className="absolute inset-0 bg-linear-to-t from-void-black/90 via-void-black/20 to-transparent z-0" />
                   <div className="absolute bottom-0 left-0 w-full p-8 flex justify-between items-end z-10">
                     <div className="max-w-[80%]">
-                      <span className="clip-chip bg-cyber-cyan/20 text-cyber-cyan font-label-caps text-xs px-3 py-1 uppercase border border-cyber-cyan/30 mb-3 inline-block">#1 This Week</span>
+                      <span className="clip-chip bg-cyber-cyan/30 text-white font-label-caps text-xs px-3 py-1 uppercase border border-cyber-cyan/50 mb-3 inline-block">#1 This Week</span>
                       <h3 className="font-headline-lg text-3xl text-white leading-tight line-clamp-2">
                         {topThisWeek[0].title.english || topThisWeek[0].title.romaji}
                       </h3>
@@ -300,9 +308,9 @@ export default function HomeClient({ initialHeroAnime = [] }: HomeClientProps) {
                         />
                       )}
                     </div>
-                    <button className="bg-surface-glass backdrop-blur-md p-4 border border-outline-variant clip-corner text-white hover:text-neon-crimson hover:border-neon-crimson hover:scale-110 transition-all hover:shadow-[0_0_15px_rgba(255,0,60,0.5)]">
+                    <span aria-hidden="true" className="bg-surface-glass backdrop-blur-md p-4 border border-outline-variant clip-corner text-white group-hover:text-neon-crimson group-hover:border-neon-crimson group-hover:scale-110 transition-all group-hover:shadow-[0_0_15px_rgba(255,0,60,0.5)]">
                       <Play className="w-8 h-8 fill-current" />
-                    </button>
+                    </span>
                   </div>
                 </Link>
                 
@@ -320,7 +328,7 @@ export default function HomeClient({ initialHeroAnime = [] }: HomeClientProps) {
                       <h3 className="font-headline-lg text-[16px] text-white leading-tight line-clamp-2">
                         {anime.title.english || anime.title.romaji}
                       </h3>
-                      <span className="font-label-caps text-[10px] text-neon-crimson mt-1 inline-block">{anime.format || "TV"}</span>
+                      <span className="font-label-caps text-xs text-neon-crimson mt-1 inline-block">{anime.format || "TV"}</span>
                     </div>
                   </Link>
                 ))}

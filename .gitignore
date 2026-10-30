@@ -40,11 +40,10 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 
-.gemini/
-.agent/
-docs/
+.github/agents/
+.github/hooks/
+.github/skills/
 .impeccable/
-_stitch/
 
 DB_MIGRATION_GUIDE.md
 # backend separate repo

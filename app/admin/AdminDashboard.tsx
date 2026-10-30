@@ -346,7 +346,7 @@ export default function AdminDashboard() {
             {/* Total Page Views */}
             <div className="bg-surface-container border border-outline-variant/30 p-4 clip-corner relative overflow-hidden group shadow-[0_4px_20px_rgba(0,0,0,0.4)]">
               <div className="flex items-center justify-between text-cyber-cyan mb-1">
-                <span className="font-label-caps text-[10px] uppercase tracking-widest text-on-surface-variant">Page Views</span>
+                <span className="font-label-caps text-xs uppercase tracking-widest text-on-surface-variant">Page Views</span>
                 <Eye className="w-4 h-4" />
               </div>
               <div className="font-headline-xl text-3xl font-bold text-white tracking-tight drop-shadow-[0_0_10px_rgba(0,240,255,0.3)]">
@@ -364,14 +364,14 @@ export default function AdminDashboard() {
                     {stats?.viewsDeltaPct}%
                   </span>
                 )}
-                <span className="text-outline-variant text-[10px]">vs prior {range}</span>
+                <span className="text-on-surface-variant text-xs">vs prior {range}</span>
               </div>
             </div>
 
             {/* Unique Visitors */}
             <div className="bg-surface-container border border-outline-variant/30 p-4 clip-corner relative overflow-hidden group shadow-[0_4px_20px_rgba(0,0,0,0.4)]">
               <div className="flex items-center justify-between text-data-purple mb-1">
-                <span className="font-label-caps text-[10px] uppercase tracking-widest text-on-surface-variant">Unique Visitors</span>
+                <span className="font-label-caps text-xs uppercase tracking-widest text-on-surface-variant">Unique Visitors</span>
                 <Users className="w-4 h-4" />
               </div>
               <div className="font-headline-xl text-3xl font-bold text-data-purple tracking-tight drop-shadow-[0_0_10px_rgba(189,0,255,0.3)]">
@@ -389,20 +389,20 @@ export default function AdminDashboard() {
                     {stats?.visitorsDeltaPct}%
                   </span>
                 )}
-                <span className="text-outline-variant text-[10px]">vs prior {range}</span>
+                <span className="text-on-surface-variant text-xs">vs prior {range}</span>
               </div>
             </div>
 
             {/* Engagement Depth (Views / Visitor) */}
             <div className="bg-surface-container border border-outline-variant/30 p-4 clip-corner relative overflow-hidden group shadow-[0_4px_20px_rgba(0,0,0,0.4)]">
               <div className="flex items-center justify-between text-cyber-cyan mb-1">
-                <span className="font-label-caps text-[10px] uppercase tracking-widest text-on-surface-variant">Engagement Depth</span>
+                <span className="font-label-caps text-xs uppercase tracking-widest text-on-surface-variant">Engagement Depth</span>
                 <Sparkles className="w-4 h-4" />
               </div>
               <div className="font-headline-xl text-3xl font-bold text-white tracking-tight">
                 {stats ? `${stats.avgViewsPerVisitor}x` : "..."}
               </div>
-              <div className="mt-2 font-label-caps text-[10px] text-on-surface-variant truncate">
+              <div className="mt-2 font-label-caps text-xs text-on-surface-variant truncate">
                 Average views per active visitor
               </div>
             </div>
@@ -410,13 +410,13 @@ export default function AdminDashboard() {
             {/* Peak Surge */}
             <div className="bg-surface-container border border-outline-variant/30 p-4 clip-corner relative overflow-hidden group shadow-[0_4px_20px_rgba(0,0,0,0.4)]">
               <div className="flex items-center justify-between text-neon-crimson mb-1">
-                <span className="font-label-caps text-[10px] uppercase tracking-widest text-on-surface-variant">Peak Traffic Spike</span>
+                <span className="font-label-caps text-xs uppercase tracking-widest text-on-surface-variant">Peak Traffic Spike</span>
                 <Flame className="w-4 h-4" />
               </div>
               <div className="font-headline-xl text-3xl font-bold text-neon-crimson tracking-tight drop-shadow-[0_0_10px_rgba(255,0,60,0.3)]">
                 {stats?.peakViews ? stats.peakViews.toLocaleString() : "0"}
               </div>
-              <div className="mt-2 font-label-caps text-[10px] text-on-surface-variant truncate">
+              <div className="mt-2 font-label-caps text-xs text-on-surface-variant truncate">
                 Recorded on {stats?.peakDate ? stats.peakDate : "N/A"}
               </div>
             </div>
@@ -438,7 +438,7 @@ export default function AdminDashboard() {
                   <button
                     type="button"
                     onClick={() => setMetricMode("all")}
-                    className={`px-2.5 py-0.5 font-label-caps text-[10px] clip-chip transition-all cursor-pointer ${
+                    className={`px-2.5 py-0.5 font-label-caps text-xs clip-chip transition-all cursor-pointer ${
                       metricMode === "all" ? "bg-white text-void-black font-bold" : "text-on-surface-variant hover:text-white"
                     }`}
                   >
@@ -447,7 +447,7 @@ export default function AdminDashboard() {
                   <button
                     type="button"
                     onClick={() => setMetricMode("views")}
-                    className={`px-2.5 py-0.5 font-label-caps text-[10px] clip-chip transition-all cursor-pointer flex items-center gap-1 ${
+                    className={`px-2.5 py-0.5 font-label-caps text-xs clip-chip transition-all cursor-pointer flex items-center gap-1 ${
                       metricMode === "views" ? "bg-cyber-cyan text-void-black font-bold" : "text-cyber-cyan hover:bg-cyber-cyan/10"
                     }`}
                   >
@@ -457,7 +457,7 @@ export default function AdminDashboard() {
                   <button
                     type="button"
                     onClick={() => setMetricMode("visitors")}
-                    className={`px-2.5 py-0.5 font-label-caps text-[10px] clip-chip transition-all cursor-pointer flex items-center gap-1 ${
+                    className={`px-2.5 py-0.5 font-label-caps text-xs clip-chip transition-all cursor-pointer flex items-center gap-1 ${
                       metricMode === "visitors" ? "bg-data-purple text-void-black font-bold" : "text-data-purple hover:bg-data-purple/10"
                     }`}
                   >
@@ -671,13 +671,13 @@ export default function AdminDashboard() {
                     <div className="bg-void-black/90 border border-cyber-cyan px-3 py-2 text-xs font-label-caps shadow-[0_0_20px_rgba(0,240,255,0.3)] clip-chip backdrop-blur-md">
                       <div className="text-white font-bold flex items-center justify-between gap-4">
                         <span>{activePoint.date}</span>
-                        <span className="text-[10px] text-outline-variant">TELEMETRY POINT</span>
+                        <span className="text-xs text-cyber-cyan/80">TELEMETRY POINT</span>
                       </div>
                       <div className="h-px w-full bg-cyber-cyan/20 my-1.5" />
                       <div className="flex items-center gap-4 text-cyber-cyan">
                         <span>Views: <strong className="text-white text-sm">{activePoint.views.toLocaleString()}</strong></span>
                         <span className="text-data-purple">Visitors: <strong className="text-white text-sm">{activePoint.visitors.toLocaleString()}</strong></span>
-                        <span className="text-on-surface-variant text-[10px]">
+                        <span className="text-on-surface-variant text-xs">
                           Ratio: {activePoint.visitors > 0 ? (activePoint.views / activePoint.visitors).toFixed(1) : 1}x
                         </span>
                       </div>
@@ -700,7 +700,7 @@ export default function AdminDashboard() {
                     <Flame className="w-3.5 h-3.5" />
                     <span>Top Anime</span>
                   </h4>
-                  <span className="text-[10px] font-label-caps text-outline-variant">VIEWS SHARE</span>
+                  <span className="text-xs font-label-caps text-cyber-cyan/80">VIEWS SHARE</span>
                 </div>
                 <div className="flex flex-col gap-2">
                   {stats?.topAnime.slice(0, 5).map((anime, idx) => {
@@ -713,7 +713,7 @@ export default function AdminDashboard() {
                             className="text-on-surface hover:text-neon-crimson truncate max-w-[70%] transition-colors flex items-center gap-1"
                             title={anime.title}
                           >
-                            <span className="text-outline-variant text-[10px]">{(idx + 1).toString().padStart(2, "0")}</span>
+                            <span className="text-outline-variant text-xs">{(idx + 1).toString().padStart(2, "0")}</span>
                             <span className="truncate">{anime.title}</span>
                           </Link>
                           <span className="text-neon-crimson font-bold text-[11px]">{anime.views.toLocaleString()}</span>
@@ -739,7 +739,7 @@ export default function AdminDashboard() {
                     <Activity className="w-3.5 h-3.5" />
                     <span>Top Destinations</span>
                   </h4>
-                  <span className="text-[10px] font-label-caps text-outline-variant">PAGE REACH</span>
+                  <span className="text-xs font-label-caps text-cyber-cyan/80">PAGE REACH</span>
                 </div>
                 <div className="flex flex-col gap-2">
                   {stats?.topPages.slice(0, 5).map((page, idx) => {
@@ -752,7 +752,7 @@ export default function AdminDashboard() {
                             className="text-on-surface hover:text-cyber-cyan truncate max-w-[70%] transition-colors flex items-center gap-1 font-mono text-[11px]"
                             title={page.path}
                           >
-                            <span className="text-outline-variant text-[10px]">{(idx + 1).toString().padStart(2, "0")}</span>
+                            <span className="text-outline-variant text-xs">{(idx + 1).toString().padStart(2, "0")}</span>
                             <span className="truncate">{page.path}</span>
                           </Link>
                           <span className="text-cyber-cyan font-bold text-[11px]">{page.views.toLocaleString()}</span>
@@ -778,7 +778,7 @@ export default function AdminDashboard() {
                     <Clock className="w-3.5 h-3.5" />
                     <span>Daypart Traffic Density</span>
                   </h4>
-                  <span className="text-[10px] font-label-caps text-outline-variant">HOURLY DISTRIBUTION</span>
+                  <span className="text-xs font-label-caps text-cyber-cyan/80">HOURLY DISTRIBUTION</span>
                 </div>
 
                 <div className="grid grid-cols-2 gap-2 text-xs font-label-caps">
@@ -974,7 +974,7 @@ export default function AdminDashboard() {
                           <span className="text-cyber-cyan/50 mr-2">[{b.id.slice(0, 6).toUpperCase()}]</span>
                           {b.title}
                         </span>
-                        <span className="font-label-caps text-[10px] text-cyber-cyan/70 shrink-0">{timeAgo(b.createdAt)}</span>
+                        <span className="font-label-caps text-xs text-cyber-cyan/70 shrink-0">{timeAgo(b.createdAt)}</span>
                       </div>
                       <p className="font-label-caps text-[11px] text-on-surface-variant/80 line-clamp-2 pl-1">{b.message}</p>
                     </div>

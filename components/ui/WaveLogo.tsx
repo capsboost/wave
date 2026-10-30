@@ -188,17 +188,17 @@ export function WaveLogo({
       {/* Glowing Cyber Icon Emblem */}
       <div className="relative flex items-center justify-center">
         {/* Ambient Neon Backlight Halo */}
-        <div className="absolute -inset-1 bg-linear-to-r from-neon-crimson/30 to-cyber-cyan/30 blur-sm opacity-50 group-hover:opacity-100 transition-opacity duration-300" />
+        <div className="absolute -inset-1 bg-linear-to-r from-neon-crimson/20 to-cyber-cyan/20 blur-sm opacity-40 group-hover:opacity-70 transition-opacity duration-300" />
         <WaveLogoIcon className={iconSizes[size]} />
       </div>
 
       {/* Typographic Lockup */}
       <div className="flex flex-col leading-none">
         <div className={`font-headline-lg font-black italic flex items-center ${textSizes[size]}`}>
-          <span className="text-white drop-shadow-[0_0_12px_rgba(255,255,255,0.25)] transition-colors group-hover:text-cyber-cyan">
+          <span className="text-white transition-colors group-hover:text-cyber-cyan">
             WAVE
           </span>
-          <span className="text-neon-crimson drop-shadow-[0_0_14px_rgba(255,0,60,0.5)] transition-all group-hover:drop-shadow-[0_0_18px_rgba(255,0,60,0.9)]">
+          <span className="text-neon-crimson transition-colors">
             ANIME
           </span>
         </div>
