@@ -120,15 +120,22 @@ async function fetchAniList<T>(query: string, variables: Record<string, string |
   const headers = isClient
     ? { "Content-Type": "application/json", "Accept": "application/json" }
     : ANILIST_HEADERS;
+  const requestOptions: RequestInit = {
+    method: "POST",
+    headers,
+    body: JSON.stringify({ query, variables }),
+    signal: AbortSignal.timeout(8_000),
+  };
+  const fetchProxy = () =>
+    fetch("/api/anilist", {
+      ...requestOptions,
+      headers: { "Content-Type": "application/json", "Accept": "application/json" },
+      signal: AbortSignal.timeout(8_000),
+    });
 
   let response: Response;
   try {
-    response = await fetch(url, {
-      method: "POST",
-      headers,
-      body: JSON.stringify({ query, variables }),
-      signal: AbortSignal.timeout(8_000),
-    });
+    response = await fetch(url, requestOptions);
   } catch (err: unknown) {
     if (!isClient) {
       tripAniListCircuit(err instanceof Error ? err.message : "Network error");
@@ -136,14 +143,18 @@ async function fetchAniList<T>(query: string, variables: Record<string, string |
     }
 
     try {
-      response = await fetch("/api/anilist", {
-        method: "POST",
-        headers: { "Content-Type": "application/json", "Accept": "application/json" },
-        body: JSON.stringify({ query, variables }),
-        signal: AbortSignal.timeout(8_000),
-      });
+      response = await fetchProxy();
     } catch (proxyError: unknown) {
       tripAniListCircuit(proxyError instanceof Error ? proxyError.message : "Network error");
+      throw proxyError;
+    }
+  }
+
+  if (isClient && (response.status === 403 || response.status === 429 || response.status >= 500)) {
+    try {
+      response = await fetchProxy();
+    } catch (proxyError: unknown) {
+      tripAniListCircuit(proxyError instanceof Error ? proxyError.message : "Proxy network error");
       throw proxyError;
     }
   }
