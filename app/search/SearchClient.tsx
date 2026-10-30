@@ -168,7 +168,7 @@ export default function SearchClient() {
 
       {/* In-Page Cyber Search Bar */}
       <div className="relative mb-stack-md">
-        <div className="flex items-center relative border border-outline-variant/40 focus-within:border-cyber-cyan transition-colors bg-surface-container/50 clip-chip min-h-11">
+        <div className="flex items-center relative border border-outline-variant/40 focus-within:border-neon-crimson transition-colors bg-surface-container/50 clip-chip min-h-11">
           <Search className="w-4 h-4 text-cyber-cyan ml-3.5 shrink-0" />
           <input
             ref={searchInputRef}
@@ -178,7 +178,7 @@ export default function SearchClient() {
             value={searchInput}
             onChange={(e) => setSearchInput(e.target.value)}
             placeholder="Search anime catalog by title, character, or studio..."
-            className="bg-transparent outline-none border-none focus:ring-0 text-on-surface font-label-caps text-sm w-full py-2.5 px-3 placeholder:text-on-surface-variant/70"
+            className="bg-transparent !outline-none border-none focus:ring-0 focus-visible:!outline-none text-on-surface font-label-caps text-sm w-full py-2.5 px-3 placeholder:text-on-surface-variant/70"
           />
           {searchInput && (
             <button

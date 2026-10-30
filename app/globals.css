@@ -210,6 +210,11 @@
   outline-offset: 3px;
 }
 
+input[type="text"]:focus-visible {
+  outline: none;
+  outline-offset: 0;
+}
+
 button:disabled,
 input:disabled,
 select:disabled,

@@ -140,7 +140,7 @@ export function Navbar() {
                 onChange={(e) => setQuery(e.target.value)}
                 onFocus={() => setIsFocused(true)}
                 placeholder="Search anime..."
-                className="bg-transparent outline-none border-none focus:ring-0 text-on-surface font-label-caps text-label-caps w-full py-2 px-2 placeholder:text-on-surface-variant"
+                className="bg-transparent !outline-none border-none focus:ring-0 focus-visible:!outline-none text-on-surface font-label-caps text-label-caps w-full py-2 px-2 placeholder:text-on-surface-variant"
               />
             </form>
             
@@ -420,7 +420,7 @@ export function Navbar() {
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               placeholder="Search anime..."
-              className="bg-transparent outline-none border-none focus:ring-0 text-on-surface font-label-caps text-label-caps w-full py-3 px-3 placeholder:text-on-surface-variant"
+              className="bg-transparent !outline-none border-none focus:ring-0 focus-visible:!outline-none text-on-surface font-label-caps text-label-caps w-full py-3 px-3 placeholder:text-on-surface-variant"
               autoFocus
             />
           </form>
