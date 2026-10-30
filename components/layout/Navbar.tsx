@@ -130,7 +130,7 @@ export function Navbar() {
           <div ref={wrapperRef} className="relative hidden xl:block">
             <form 
               onSubmit={handleSearch}
-              className="flex items-center relative border-b border-outline-variant transition-colors bg-surface-glass w-28 lg:w-40 xl:w-64"
+              className="flex items-center relative border-b border-outline-variant focus-within:border-neon-crimson transition-colors bg-surface-glass w-28 lg:w-40 xl:w-64"
             >
               <Search className="w-4 h-4 text-on-surface-variant ml-2" />
               <input
@@ -411,7 +411,7 @@ export function Navbar() {
         <div id="mobile-search-panel" className="xl:hidden absolute top-full left-0 w-full bg-surface-container/95 backdrop-blur-xl border-b border-outline-variant/30 p-4 shadow-[0_10px_30px_rgba(0,0,0,0.8)] z-40">
           <form 
             onSubmit={handleSearch}
-            className="flex items-center relative border border-outline-variant transition-colors bg-surface-glass w-full mb-2"
+            className="flex items-center relative border border-outline-variant focus-within:border-neon-crimson transition-colors bg-surface-glass w-full mb-2"
           >
             <Search className="w-4 h-4 text-on-surface-variant ml-3" />
             <input

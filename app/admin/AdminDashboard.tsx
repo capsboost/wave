@@ -869,7 +869,7 @@ export default function AdminDashboard() {
                   value={broadcastForm.title}
                   onChange={e => setBroadcastForm({...broadcastForm, title: e.target.value})}
                   required
-                  className="bg-void-black border border-outline-variant/30 p-3 text-cyber-cyan font-label-caps text-sm outline-none transition-all clip-chip"
+                  className="bg-void-black border border-outline-variant/30 p-3 text-cyber-cyan font-label-caps text-sm focus:outline-none focus:border-neon-crimson focus:shadow-[0_0_15px_rgba(255,0,60,0.2)] transition-all clip-chip"
                   placeholder="SYSTEM.UPDATE.V2"
                 />
               </div>
@@ -882,7 +882,7 @@ export default function AdminDashboard() {
                   onChange={e => setBroadcastForm({...broadcastForm, message: e.target.value})}
                   required
                   rows={4}
-                  className="bg-void-black border border-outline-variant/30 p-3 text-cyber-cyan font-label-caps text-sm outline-none transition-all clip-chip resize-none"
+                  className="bg-void-black border border-outline-variant/30 p-3 text-cyber-cyan font-label-caps text-sm focus:outline-none focus:border-neon-crimson focus:shadow-[0_0_15px_rgba(255,0,60,0.2)] transition-all clip-chip resize-none"
                   placeholder="INITIALIZING_NEW_FEATURES..."
                 />
               </div>
@@ -895,7 +895,7 @@ export default function AdminDashboard() {
                     type="text" 
                     value={broadcastForm.linkUrl}
                     onChange={e => setBroadcastForm({...broadcastForm, linkUrl: e.target.value})}
-                    className="bg-void-black border border-outline-variant/30 p-3 text-cyber-cyan font-label-caps text-sm outline-none transition-all clip-chip"
+                    className="bg-void-black border border-outline-variant/30 p-3 text-cyber-cyan font-label-caps text-sm focus:outline-none focus:border-neon-crimson focus:shadow-[0_0_15px_rgba(255,0,60,0.2)] transition-all clip-chip"
                     placeholder="/watch/123"
                   />
                 </div>
@@ -906,7 +906,7 @@ export default function AdminDashboard() {
                     type="text" 
                     value={broadcastForm.linkLabel}
                     onChange={e => setBroadcastForm({...broadcastForm, linkLabel: e.target.value})}
-                    className="bg-void-black border border-outline-variant/30 p-3 text-cyber-cyan font-label-caps text-sm outline-none transition-all clip-chip"
+                    className="bg-void-black border border-outline-variant/30 p-3 text-cyber-cyan font-label-caps text-sm focus:outline-none focus:border-neon-crimson focus:shadow-[0_0_15px_rgba(255,0,60,0.2)] transition-all clip-chip"
                     placeholder="EXECUTE"
                   />
                 </div>

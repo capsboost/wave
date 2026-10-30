@@ -326,7 +326,7 @@ export default function ContinueWatchingClient() {
                 aria-label="Search watch history"
                 autoComplete="off"
                 spellCheck="false"
-                className="w-full bg-surface-container border border-outline-variant/40 outline-none pl-9 pr-8 py-2 font-label-caps text-xs text-white clip-chip placeholder:text-on-surface-variant transition-colors tracking-wider"
+                className="w-full bg-surface-container border border-outline-variant/40 focus:border-neon-crimson outline-none pl-9 pr-8 py-2 font-label-caps text-xs text-white clip-chip placeholder:text-on-surface-variant transition-colors tracking-wider"
               />
               {searchQuery && (
                 <button

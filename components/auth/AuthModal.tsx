@@ -91,7 +91,7 @@ export function AuthModal() {
                     value={name}
                     onChange={(e) => setName(e.target.value)}
                     required
-                    className="w-full bg-void-black border border-outline-variant/50 outline-none text-white px-10 py-3 font-body-md transition-colors"
+                    className="w-full bg-void-black border border-outline-variant/50 focus:border-neon-crimson outline-none text-white px-10 py-3 font-body-md transition-colors"
                     placeholder="CyberNinja99"
                   />
                 </div>
@@ -108,7 +108,7 @@ export function AuthModal() {
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   required
-                  className="w-full bg-void-black border border-outline-variant/50 outline-none text-white px-10 py-3 font-body-md transition-colors"
+                  className="w-full bg-void-black border border-outline-variant/50 focus:border-neon-crimson outline-none text-white px-10 py-3 font-body-md transition-colors"
                   placeholder="name@example.com"
                 />
               </div>
@@ -125,7 +125,7 @@ export function AuthModal() {
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     required
-                    className="w-full bg-void-black border border-outline-variant/50 outline-none text-white px-10 py-3 font-body-md transition-colors"
+                    className="w-full bg-void-black border border-outline-variant/50 focus:border-neon-crimson outline-none text-white px-10 py-3 font-body-md transition-colors"
                     placeholder="••••••••"
                   />
                 </div>

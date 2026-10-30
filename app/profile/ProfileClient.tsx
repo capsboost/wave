@@ -300,7 +300,7 @@ export default function ProfileClient() {
                       value={currentPassword}
                       onChange={e => setCurrentPassword(e.target.value)}
                       required
-                      className="w-full bg-void-black border border-outline-variant/50 outline-none text-white px-4 py-3 font-body-md transition-colors clip-corner"
+                      className="w-full bg-void-black border border-outline-variant/50 focus:border-white outline-none text-white px-4 py-3 font-body-md transition-colors clip-corner"
                     />
                   </div>
                   <div className="space-y-1">
@@ -311,7 +311,7 @@ export default function ProfileClient() {
                       value={newPassword}
                       onChange={e => setNewPassword(e.target.value)}
                       required
-                      className="w-full bg-void-black border border-outline-variant/50 outline-none text-white px-4 py-3 font-body-md transition-colors clip-corner"
+                      className="w-full bg-void-black border border-outline-variant/50 focus:border-white outline-none text-white px-4 py-3 font-body-md transition-colors clip-corner"
                     />
                   </div>
                   <button 

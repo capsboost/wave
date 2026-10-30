@@ -168,7 +168,7 @@ export default function SearchClient() {
 
       {/* In-Page Cyber Search Bar */}
       <div className="relative mb-stack-md">
-        <div className="flex items-center relative border border-outline-variant/40 transition-colors bg-surface-container/50 clip-chip min-h-11">
+        <div className="flex items-center relative border border-outline-variant/40 focus-within:border-neon-crimson transition-colors bg-surface-container/50 clip-chip min-h-11">
           <Search className="w-4 h-4 text-cyber-cyan ml-3.5 shrink-0" />
           <input
             ref={searchInputRef}
@@ -205,7 +205,7 @@ export default function SearchClient() {
           aria-label="Filter by year"
           value={year}
           onChange={(e) => updateParams({ year: Number(e.target.value) })}
-          className="bg-surface-container text-on-surface border border-outline-variant/40 px-3 py-2.5 font-label-caps text-xs clip-chip outline-none hover:border-cyber-cyan transition-colors min-h-11 cursor-pointer"
+          className="bg-surface-container text-on-surface border border-outline-variant/40 px-3 py-2.5 font-label-caps text-xs clip-chip outline-none focus:border-neon-crimson hover:border-cyber-cyan transition-colors min-h-11 cursor-pointer"
         >
           <option value={0}>Any Year</option>
           {Array.from({ length: 40 }, (_, i) => new Date().getFullYear() - i).map((y) => (
@@ -219,7 +219,7 @@ export default function SearchClient() {
           aria-label="Filter by format"
           value={format}
           onChange={(e) => updateParams({ format: e.target.value })}
-          className="bg-surface-container text-on-surface border border-outline-variant/40 px-3 py-2.5 font-label-caps text-xs clip-chip outline-none hover:border-cyber-cyan transition-colors min-h-11 cursor-pointer"
+          className="bg-surface-container text-on-surface border border-outline-variant/40 px-3 py-2.5 font-label-caps text-xs clip-chip outline-none focus:border-neon-crimson hover:border-cyber-cyan transition-colors min-h-11 cursor-pointer"
         >
           <option value="Any">Any Format</option>
           <option value="TV">TV Series</option>
@@ -232,7 +232,7 @@ export default function SearchClient() {
           aria-label="Filter by rating"
           value={score}
           onChange={(e) => updateParams({ score: Number(e.target.value) })}
-          className="bg-surface-container text-on-surface border border-outline-variant/40 px-3 py-2.5 font-label-caps text-xs clip-chip outline-none hover:border-cyber-cyan transition-colors min-h-11 cursor-pointer"
+          className="bg-surface-container text-on-surface border border-outline-variant/40 px-3 py-2.5 font-label-caps text-xs clip-chip outline-none focus:border-neon-crimson hover:border-cyber-cyan transition-colors min-h-11 cursor-pointer"
         >
           <option value={0}>Any Rating</option>
           <option value={90}>Masterpiece (90+)</option>
@@ -245,7 +245,7 @@ export default function SearchClient() {
           aria-label="Filter by release status"
           value={status}
           onChange={(e) => updateParams({ status: e.target.value })}
-          className="bg-surface-container text-on-surface border border-outline-variant/40 px-3 py-2.5 font-label-caps text-xs clip-chip outline-none hover:border-cyber-cyan transition-colors min-h-11 cursor-pointer"
+          className="bg-surface-container text-on-surface border border-outline-variant/40 px-3 py-2.5 font-label-caps text-xs clip-chip outline-none focus:border-neon-crimson hover:border-cyber-cyan transition-colors min-h-11 cursor-pointer"
         >
           <option value="Any">Any Status</option>
           <option value="RELEASING">Airing</option>
@@ -257,7 +257,7 @@ export default function SearchClient() {
           aria-label="Sort anime"
           value={sort}
           onChange={(e) => updateParams({ sort: e.target.value })}
-          className="bg-surface-container text-on-surface border border-outline-variant/40 px-3 py-2.5 font-label-caps text-xs clip-chip outline-none hover:border-cyber-cyan transition-colors min-h-11 cursor-pointer md:ml-auto"
+          className="bg-surface-container text-on-surface border border-outline-variant/40 px-3 py-2.5 font-label-caps text-xs clip-chip outline-none focus:border-neon-crimson hover:border-cyber-cyan transition-colors min-h-11 cursor-pointer md:ml-auto"
         >
           <option value="SEARCH_MATCH">Sort: Best Match</option>
           <option value="TRENDING_DESC">Sort: Trending</option>
