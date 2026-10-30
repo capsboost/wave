@@ -4,21 +4,18 @@ import { useEffect, useRef, useCallback } from "react";
 import { useSession } from "@/lib/auth-client";
 import { useWatchStore, type ServerWatchItem } from "@/store/useWatchStore";
 
-const SYNC_INTERVAL_MS = 30_000; // 30 seconds
-
 /**
  * useProgressSync — background sync hook for watch progress.
  * 
- * - On login/mount: fetches server progress and merges into local store (with conflict detection).
- * - Every 30s: pushes dirty local entries to the server.
- * - On page unload: final flush of dirty entries.
+ * - On login: fetches server progress and merges into local store.
+ * - On pause, backgrounding, or page exit: pushes dirty entries to the server.
  * - No-ops entirely for unauthenticated users.
  */
 export function useProgressSync() {
   const { data: session } = useSession();
   const userId = session?.user?.id;
-  const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const syncInFlightRef = useRef<Promise<void> | null>(null);
+  const syncRequestedRef = useRef(false);
   const lastFetchedUserIdRef = useRef<string | null>(null);
 
   const getDirtyEntries = useWatchStore((s) => s.getDirtyEntries);
@@ -27,37 +24,46 @@ export function useProgressSync() {
 
   // Push dirty entries to server
   const syncToServer = useCallback(async () => {
-    if (!userId || syncInFlightRef.current) return;
+    if (!userId) return;
 
-    const dirtyEntries = getDirtyEntries();
-    if (dirtyEntries.length === 0) return;
+    if (syncInFlightRef.current) {
+      syncRequestedRef.current = true;
+      await syncInFlightRef.current;
+      return;
+    }
 
     const sync = (async () => {
-      const promises = dirtyEntries.map(async (entry) => {
-        try {
-          const res = await fetch("/api/progress", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              animeId: String(entry.mal_id),
-              episodeNumber: Number(entry.episode),
-              progressSeconds: entry.time || 0,
-              durationSeconds: entry.duration || 0,
-              title: entry.title || "",
-              imageUrl: entry.image_url || "",
-              language: entry.language || "sub",
-            }),
-          });
+      do {
+        syncRequestedRef.current = false;
+        const dirtyEntries = getDirtyEntries();
+        const promises = dirtyEntries.map(async (entry) => {
+          try {
+            const res = await fetch("/api/progress", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                animeId: String(entry.mal_id),
+                episodeNumber: Number(entry.episode),
+                progressSeconds: entry.time || 0,
+                durationSeconds: entry.duration || 0,
+                title: entry.title || "",
+                imageUrl: entry.image_url || "",
+                language: entry.language || "sub",
+              }),
+            });
 
-          if (res.ok) {
-            markSynced(entry);
+            if (res.ok) {
+              markSynced(entry);
+            } else {
+              console.warn(`Failed to sync progress for ${entry.mal_id}: HTTP ${res.status}`);
+            }
+          } catch (err) {
+            console.warn("Failed to sync progress for", entry.mal_id, err);
           }
-        } catch (err) {
-          console.warn("Failed to sync progress for", entry.mal_id, err);
-        }
-      });
+        });
 
-      await Promise.allSettled(promises);
+        await Promise.allSettled(promises);
+      } while (syncRequestedRef.current && userId);
     })();
 
     syncInFlightRef.current = sync;
@@ -98,52 +104,16 @@ export function useProgressSync() {
     if (lastFetchedUserIdRef.current === userId) return;
     lastFetchedUserIdRef.current = userId;
 
-    void fetchAndMerge().then((merged) => {
-      if (merged && lastFetchedUserIdRef.current === userId) {
-        void syncToServer();
-      }
-    });
-  }, [userId, fetchAndMerge, syncToServer]);
+    void fetchAndMerge();
+  }, [userId, fetchAndMerge]);
 
-  // Push local changes every 30 seconds and pull changes from other devices every minute.
-  useEffect(() => {
-    if (!userId) {
-      if (intervalRef.current) {
-        clearInterval(intervalRef.current);
-        intervalRef.current = null;
-      }
-      return;
-    }
-
-    let tick = 0;
-    intervalRef.current = setInterval(() => {
-      tick += 1;
-      if (tick % 2 === 0) {
-        void fetchAndMerge().then((merged) => {
-          if (merged) void syncToServer();
-        });
-      } else {
-        void syncToServer();
-      }
-    }, SYNC_INTERVAL_MS);
-
-    return () => {
-      if (intervalRef.current) {
-        clearInterval(intervalRef.current);
-        intervalRef.current = null;
-      }
-    };
-  }, [userId, syncToServer, fetchAndMerge]);
-
-  // Refresh from the server when a user returns to this tab or browser.
+  // Refresh cloud progress when a user returns to this tab; do not poll in the background.
   useEffect(() => {
     if (!userId) return;
 
     const refreshProgress = () => {
       if (document.visibilityState === "hidden") return;
-      void fetchAndMerge().then((merged) => {
-        if (merged) void syncToServer();
-      });
+      void fetchAndMerge();
     };
 
     window.addEventListener("focus", refreshProgress);
@@ -152,11 +122,17 @@ export function useProgressSync() {
       window.removeEventListener("focus", refreshProgress);
       document.removeEventListener("visibilitychange", refreshProgress);
     };
-  }, [userId, fetchAndMerge, syncToServer]);
+  }, [userId, fetchAndMerge]);
 
-  // Flush local progress during navigation and page shutdown.
+  // Flush local progress when playback pauses, the tab is backgrounded, or the page exits.
   useEffect(() => {
     if (!userId) return;
+
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === "hidden") {
+        void syncToServer();
+      }
+    };
 
     const handleCustomSync = () => {
       void syncToServer();
@@ -179,9 +155,11 @@ export function useProgressSync() {
     };
 
     window.addEventListener("wave-sync-progress", handleCustomSync);
+    document.addEventListener("visibilitychange", handleVisibilityChange);
     window.addEventListener("pagehide", handleUnload);
     return () => {
       window.removeEventListener("wave-sync-progress", handleCustomSync);
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
       window.removeEventListener("pagehide", handleUnload);
     };
   }, [userId, syncToServer, getDirtyEntries]);

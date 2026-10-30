@@ -75,7 +75,7 @@ export function useAnimeDetails(malId: string | number, initialData?: AniListAni
     initialData,
     staleTime: 24 * 60 * 60 * 1000, // 24 hours
     enabled: !!malId,
-    retry: 1,
+    retry: false,
   });
 }
 
@@ -90,6 +90,6 @@ export function useAnimeDetailsBatch(malIds: (string | number)[]) {
     queryFn: () => anilistApi.getAnimeDetailsByIds(malIds),
     staleTime: 24 * 60 * 60 * 1000, // 24 hours
     enabled: malIds.length > 0,
-    retry: 1,
+    retry: false,
   });
 }

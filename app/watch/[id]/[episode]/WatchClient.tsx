@@ -7,6 +7,7 @@ import { ArrowLeft, MessageSquare, Mic, FastForward } from "lucide-react";
 import { useAnimeDetails } from "@/hooks/useAnime";
 import { type AniListAnime, isSafeAnime } from "@/lib/api/anilist";
 import { RouteLoading } from "@/components/ui/RouteLoading";
+import { RouteLoadError } from "@/components/ui/RouteLoadError";
 import { useWatchStore } from "@/store/useWatchStore";
 import { WatchlistButton } from "@/components/watchlist/WatchlistButton";
 import { CommentsSection } from "@/components/comments/CommentsSection";
@@ -68,10 +69,15 @@ function getApplicableWatchEpisodes(
 
 function useEpisodeCounts(id: string, malId?: number | null, aniId?: number | null) {
   const [counts, setCounts] = useState<{ is_sub: number | null; is_dub: number | null } | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const [loadedRequestKey, setLoadedRequestKey] = useState<string | null>(null);
+  const requestKey = `${id}:${malId ?? ""}:${aniId ?? ""}`;
 
   useEffect(() => {
     let isMounted = true;
+    if (!malId && !aniId) {
+      return () => { isMounted = false; };
+    }
+
     async function fetchCounts() {
       try {
         const queryParams = new URLSearchParams();
@@ -79,30 +85,30 @@ function useEpisodeCounts(id: string, malId?: number | null, aniId?: number | nu
         if (aniId) queryParams.set('aniId', String(aniId));
         const qs = queryParams.toString();
         const url = `/api/episodes/${id}${qs ? `?${qs}` : ''}`;
-        const res = await fetch(url);
+        const res = await fetch(url, { signal: AbortSignal.timeout(8_000) });
         if (res.ok) {
           const data = await res.json();
           if (isMounted) {
             if (data && (typeof data.is_sub === 'number' || typeof data.is_dub === 'number' || data.is_sub !== undefined)) {
               setCounts({ is_sub: data.is_sub ?? null, is_dub: data.is_dub ?? null });
             }
-            setIsLoading(false);
           }
-        } else if (isMounted) {
-          setIsLoading(false);
         }
       } catch (err) {
         console.error("Failed to fetch episode counts", err);
-        if (isMounted) setIsLoading(false);
+      } finally {
+        if (isMounted) setLoadedRequestKey(requestKey);
       }
     }
-    fetchCounts();
+    void fetchCounts();
     return () => { isMounted = false; };
   // Re-fetch when anime IDs resolve (they arrive after initial render via useAnimeDetails)
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [id, malId, aniId]);
+  }, [id, malId, aniId, requestKey]);
 
-  return { counts, isLoading };
+  return {
+    counts,
+    isLoading: Boolean(malId || aniId) && loadedRequestKey !== requestKey,
+  };
 }
 
 function usePlayerEvents(
@@ -241,10 +247,10 @@ export default function WatchClient({ id, episode }: WatchClientProps) {
   const searchParams = useSearchParams();
   const initLang = searchParams.get("lang") === "dub" ? "dub" : "sub";
 
-  const { data: anime, isLoading: isAnimeLoading } = useAnimeDetails(id);
+  const { data: anime, isLoading: isAnimeLoading, isError, refetch } = useAnimeDetails(id);
   // Pass both MAL ID and AniList ID so the API can find the Anikoto row regardless of
   // which ID variant was used when syncing the database.
-  const { counts, isLoading: isCountsLoading } = useEpisodeCounts(id, anime?.idMal, anime?.id);
+  const { counts } = useEpisodeCounts(id, anime?.idMal, anime?.id);
   const addToHistory = useWatchStore((state) => state.addToHistory);
   const updateProgress = useWatchStore((state) => state.updateProgress);
 
@@ -287,8 +293,12 @@ export default function WatchClient({ id, episode }: WatchClientProps) {
   usePlayerEvents(id, episode, provider, autoNext, setStreamFailed, updateProgress);
   useAutoNextEpisode(id, episode, maxAvailableEpisodes, effectiveLanguage, counts);
 
-  if ((isAnimeLoading && !anime) || (!anime && isCountsLoading)) {
+  if (isAnimeLoading && !anime) {
     return <RouteLoading message="Loading episode details..." />;
+  }
+
+  if (!anime && isError) {
+    return <RouteLoadError message="Unable to load episode details." onRetry={() => { void refetch(); }} />;
   }
 
   if (!anime || !isSafeAnime(anime)) {

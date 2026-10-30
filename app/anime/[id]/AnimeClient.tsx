@@ -7,6 +7,7 @@ import { Play, Star, MessageSquare, Mic } from "lucide-react";
 import { useAnimeDetails } from "@/hooks/useAnime";
 import { type AniListAnime, isSafeAnime } from "@/lib/api/anilist";
 import { RouteLoading } from "@/components/ui/RouteLoading";
+import { RouteLoadError } from "@/components/ui/RouteLoadError";
 import { WatchlistButton } from "@/components/watchlist/WatchlistButton";
 import { useWatchStore, getAnimeResumeInfo } from "@/store/useWatchStore";
 import { useMounted } from "@/hooks/useMounted";
@@ -57,7 +58,7 @@ interface AnimeClientProps {
 }
 
 export default function AnimeClient({ id }: AnimeClientProps) {
-  const { data: anime, isLoading: isAnimeLoading } = useAnimeDetails(id);
+  const { data: anime, isLoading: isAnimeLoading, isError, refetch } = useAnimeDetails(id);
   const [episodeChunk, setEpisodeChunk] = useState(0);
   const [language, setLanguage] = useState<"sub" | "dub">("sub");
   const [counts, setCounts] = useState<{ is_sub: number | null, is_dub: number | null } | null>(null);
@@ -170,6 +171,10 @@ export default function AnimeClient({ id }: AnimeClientProps) {
 
   if (isAnimeLoading && !anime) {
     return <RouteLoading message="Loading anime details..." />;
+  }
+
+  if (!anime && isError) {
+    return <RouteLoadError message="Unable to load anime details." onRetry={() => { void refetch(); }} />;
   }
 
   if (!anime || !isSafeAnime(anime)) {
