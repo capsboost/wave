@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/db";
 import { animeMetadata } from "@/db/schema";
-import { sql, inArray } from "drizzle-orm";
+import { inArray } from "drizzle-orm";
 import { isSafeAnime, type AniListAnime } from "@/lib/api/anilist";
 
 export async function POST(req: NextRequest) {

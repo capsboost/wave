@@ -308,12 +308,14 @@ export default function AnimeClient({ id }: AnimeClientProps) {
       </div>
       
       <div className="w-full bg-void-black">
-        <section className="px-margin-mobile md:px-margin-desktop py-8 border-b border-outline-variant/20">
-          <h2 className="font-headline-xl text-xl text-on-surface tracking-wider">SYNOPSIS</h2>
-          <p 
-            className="text-on-surface-variant text-base md:text-lg leading-relaxed max-w-4xl"
-            dangerouslySetInnerHTML={{ __html: cleanDescription }}
-          />
+        <section className="border-b border-outline-variant/20 px-margin-mobile py-8 md:px-margin-desktop">
+          <div className="synopsis-copy max-w-4xl">
+            <h2 className="mb-4 font-headline-xl text-xl tracking-wider text-on-surface">SYNOPSIS</h2>
+            <div
+              className="text-left font-body-md text-base leading-7 text-on-surface-variant md:text-justify md:text-lg md:leading-8"
+              dangerouslySetInnerHTML={{ __html: cleanDescription }}
+            />
+          </div>
         </section>
         
         {anime.relations && anime.relations.length > 0 && (

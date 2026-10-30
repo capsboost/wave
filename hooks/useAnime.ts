@@ -25,10 +25,11 @@ function cacheAnimeMetadataInBackground(anime: AniListAnime) {
   });
 }
 
-export function useTrendingAnime(limit = 15, page = 1) {
+export function useTrendingAnime(limit = 15, page = 1, initialData?: AniListAnime[]) {
   return useQuery({
     queryKey: ["anime", "trending", limit, page],
     queryFn: () => anilistApi.getTrending(limit, page),
+    initialData: initialData?.length ? initialData : undefined,
     staleTime: 60 * 60 * 1000, // 1 hour
     retry: 1,
   });
@@ -77,15 +78,6 @@ export function useExploreAnime(query: string, filters?: { genre?: string; year?
     queryFn: ({ pageParam = 1 }) => anilistApi.searchAnimePaginated(query, filters, 20, pageParam),
     getNextPageParam: (lastPage, allPages) => lastPage.hasNextPage ? allPages.length + 1 : undefined,
     initialPageParam: 1,
-    staleTime: 60 * 60 * 1000, // 1 hour
-    retry: 1,
-  });
-}
-
-export function useAniListBanners(limit = 10, page = 1) {
-  return useQuery({
-    queryKey: ["anime", "anilist-banners", limit, page],
-    queryFn: () => anilistApi.getTrending(limit, page),
     staleTime: 60 * 60 * 1000, // 1 hour
     retry: 1,
   });

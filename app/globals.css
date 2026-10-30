@@ -299,6 +299,25 @@ html {
   animation: breathe 10s ease-in-out infinite alternate;
 }
 
+.synopsis-copy {
+  text-wrap: pretty;
+  overflow-wrap: anywhere;
+}
+
+.synopsis-copy :where(p) {
+  margin: 0;
+}
+
+.synopsis-copy :where(p + p) {
+  margin-top: 1rem;
+}
+
+.synopsis-copy :where(br) {
+  content: "";
+  display: block;
+  margin-top: 0.75rem;
+}
+
 @media (prefers-reduced-motion: reduce) {
   .animate-ken-burns,
   .animate-breathe {

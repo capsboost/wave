@@ -9,13 +9,18 @@ import { useMounted } from "@/hooks/useMounted";
 import { HeroCarousel } from "@/components/home/HeroCarousel";
 import { useRef } from "react";
 import { useRecentEpisodes, useSchedule, useTopThisWeek, useTrendingAnime } from "@/hooks/useAnime";
+import type { AniListAnime } from "@/lib/api/anilist";
 
-export default function HomeClient() {
+interface HomeClientProps {
+  initialHeroAnime?: AniListAnime[];
+}
+
+export default function HomeClient({ initialHeroAnime = [] }: HomeClientProps) {
   const {
     data: heroAnimeList = [],
     isError: isHeroError,
     refetch: refetchHero,
-  } = useTrendingAnime(10, 1);
+  } = useTrendingAnime(10, 1, initialHeroAnime);
   const { data: trendingAnime = [] } = useTrendingAnime(15, 2);
   const { data: recentEpisodes = [] } = useRecentEpisodes(20);
   const { data: topThisWeek = [] } = useTopThisWeek(9);
