@@ -2,7 +2,6 @@
 
 import Link from "next/link";
 import Image from "next/image";
-import { useAnimeDetails } from "@/hooks/useAnime";
 import { WatchlistButton } from "@/components/watchlist/WatchlistButton";
 import type { AniListAnime } from "@/lib/api/anilist";
 
@@ -14,16 +13,20 @@ interface ProfileAnimeCardProps {
 }
 
 export function ProfileAnimeCard({ animeId, dateAdded, anime: prefetchedAnime }: ProfileAnimeCardProps) {
-  // Only fetch individually when no pre-fetched data is available (e.g. standalone usage).
-  // The profile page always passes pre-fetched data via useAnimeDetailsBatch.
-  const { data: fetchedAnime, isLoading } = useAnimeDetails(animeId, prefetchedAnime);
-  const anime = prefetchedAnime ?? fetchedAnime;
-
-  if (!prefetchedAnime && isLoading) {
-    return <div className="aspect-3/4 bg-surface-container/50 animate-pulse clip-corner border border-outline-variant/30"></div>;
+  const anime = prefetchedAnime;
+  if (!anime) {
+    return (
+      <Link
+        href={`/anime/${animeId}`}
+        className="aspect-3/4 bg-surface-container/50 clip-corner border border-outline-variant/30 flex flex-col justify-end p-4"
+      >
+        <span className="font-label-caps text-xs text-on-surface-variant">Anime details unavailable</span>
+        <span className="font-label-caps text-[10px] text-on-surface-variant mt-1">
+          Added: {new Date(dateAdded).toLocaleDateString()}
+        </span>
+      </Link>
+    );
   }
-
-  if (!anime) return null;
 
   return (
     <div className="perspective-[1000px]">

@@ -123,6 +123,7 @@ function throttledFetch(url: string, init?: RequestInit): Promise<Response> {
         lastRequestTime = Date.now();
         return fetch(url, {
           ...init,
+          signal: init?.signal ?? AbortSignal.timeout(8_000),
           headers: {
             "Accept": "application/json",
             // User-Agent is a forbidden header in browser Fetch -- only set server-side
@@ -178,6 +179,7 @@ async function fetchKitsu<T>(endpoint: string): Promise<T> {
       "Accept": "application/vnd.api+json",
       "Content-Type": "application/vnd.api+json",
     },
+    signal: AbortSignal.timeout(8_000),
   });
 
   if (!res.ok) {

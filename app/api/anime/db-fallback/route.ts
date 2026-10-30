@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/db";
 import { animeMetadata } from "@/db/schema";
-import { eq, or, and, desc, ilike } from "drizzle-orm";
+import { eq, or, and, desc, ilike, inArray } from "drizzle-orm";
 import type { AniListAnime } from "@/lib/api/anilist";
 
 function mapRowToAniList(row: typeof animeMetadata.$inferSelect): AniListAnime {
@@ -36,8 +36,30 @@ export async function GET(req: NextRequest) {
     const { searchParams } = new URL(req.url);
     const action = searchParams.get("action") || "popular";
     const id = searchParams.get("id");
+    const ids = searchParams.get("ids");
     const q = searchParams.get("q");
     const limit = Math.min(Math.max(1, Number(searchParams.get("limit")) || 20), 50);
+
+    if (action === "details" && ids) {
+      const numericIds = [...new Set(ids.split(",").map(Number).filter((value) => Number.isSafeInteger(value) && value > 0))].slice(0, 50);
+      if (numericIds.length === 0) {
+        return NextResponse.json({ media: [] });
+      }
+
+      const rows = await db
+        .select()
+        .from(animeMetadata)
+        .where(and(eq(animeMetadata.is_adult, false), inArray(animeMetadata.mal_id, numericIds)));
+
+      return NextResponse.json(
+        { media: rows.map(mapRowToAniList) },
+        {
+          headers: {
+            "Cache-Control": "public, s-maxage=3600, stale-while-revalidate=86400",
+          },
+        }
+      );
+    }
 
     // 1. Single anime details lookup
     if (action === "details" && id) {

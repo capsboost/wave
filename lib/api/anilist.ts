@@ -116,13 +116,7 @@ async function fetchAniList<T>(query: string, variables: Record<string, string |
 
   const isClient = typeof window !== "undefined";
 
-  // IMPORTANT: In the browser we ALWAYS route through our /api/anilist proxy.
-  // Rationale: AniList's rate limit is per-IP. If we call graphql.anilist.co directly
-  // from users' browsers, every user has their own 90-req/min bucket. A profile page
-  // with 20 watchlist items fires 20 simultaneous requests and instantly 429s that user.
-  // Via the proxy our server IP is shared, Next.js fetch-caches responses (5-min TTL),
-  // and the same query from multiple users hits the cache instead of AniList.
-  const url = isClient ? "/api/anilist" : ANILIST_API_URL;
+  const url = ANILIST_API_URL;
   const headers = isClient
     ? { "Content-Type": "application/json", "Accept": "application/json" }
     : ANILIST_HEADERS;
@@ -133,29 +127,31 @@ async function fetchAniList<T>(query: string, variables: Record<string, string |
       method: "POST",
       headers,
       body: JSON.stringify({ query, variables }),
+      signal: AbortSignal.timeout(8_000),
     });
   } catch (err: unknown) {
-    tripAniListCircuit(err instanceof Error ? err.message : "Network error");
-    throw err;
+    if (!isClient) {
+      tripAniListCircuit(err instanceof Error ? err.message : "Network error");
+      throw err;
+    }
+
+    try {
+      response = await fetch("/api/anilist", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "Accept": "application/json" },
+        body: JSON.stringify({ query, variables }),
+        signal: AbortSignal.timeout(8_000),
+      });
+    } catch (proxyError: unknown) {
+      tripAniListCircuit(proxyError instanceof Error ? proxyError.message : "Network error");
+      throw proxyError;
+    }
   }
 
   if (!response.ok) {
     if (response.status === 429) {
-      const retryAfterHeader = response.headers.get("Retry-After");
-      const delayMs = retryAfterHeader ? Math.max(1000, Number(retryAfterHeader) * 1000) : 2000;
-      await new Promise((res) => setTimeout(res, Math.min(delayMs, 5000)));
-      // On 429, both client and server retry through the proxy
-      const retry = await fetch(isClient ? "/api/anilist" : ANILIST_API_URL, {
-        method: "POST",
-        headers,
-        body: JSON.stringify({ query, variables }),
-      });
-      if (!retry.ok) {
-        tripAniListCircuit(`Rate limited (${retry.status})`);
-        throw new Error("AniList API Rate Limit Exceeded");
-      }
-      const json = await retry.json();
-      return json.data;
+      tripAniListCircuit("Rate limited (429)");
+      throw new Error("AniList API rate limit exceeded");
     }
 
     if (response.status === 403 || response.status >= 500) {
@@ -190,7 +186,10 @@ async function fetchDbFallback<T>(params: Record<string, string | number>): Prom
     const url = new URL("/api/anime/db-fallback", baseUrl);
     Object.entries(params).forEach(([k, v]) => url.searchParams.set(k, String(v)));
 
-    const res = await fetch(url.toString(), { cache: "no-store" });
+    const res = await fetch(url.toString(), {
+      cache: "no-store",
+      signal: AbortSignal.timeout(8_000),
+    });
     if (!res.ok) return null;
     return await res.json() as T;
   } catch (e) {
@@ -797,35 +796,45 @@ export const anilistApi = {
   getAnimeDetailsByIds: async (malIds: (string | number)[]): Promise<AniListAnime[]> => {
     if (!malIds || malIds.length === 0) return [];
 
-    const numericIds = malIds.map(Number).filter(n => !isNaN(n) && n > 0);
+    const numericIds = [...new Set(malIds.map(Number).filter((n) => Number.isSafeInteger(n) && n > 0))];
     if (numericIds.length === 0) return [];
 
-    if (!isAniListCircuitOpen()) {
-      try {
-        const query = `
-          query($idMal_in: [Int]) {
-            Page(page: 1, perPage: 50) {
-              media(idMal_in: $idMal_in, type: ANIME, isAdult: false, genre_not_in: ["Hentai"]) {
-                ${MEDIA_FIELDS}
-              }
-            }
+    const query = `
+      query($idMal_in: [Int]) {
+        Page(page: 1, perPage: 50) {
+          media(idMal_in: $idMal_in, type: ANIME, isAdult: false, genre_not_in: ["Hentai"]) {
+            ${MEDIA_FIELDS}
           }
-        `;
-        const data = await fetchAniList<{ Page: { media: AniListAnime[] } }>(query, { idMal_in: numericIds });
-        if (data?.Page?.media) {
-          return data.Page.media.filter(isSafeAnime);
         }
-      } catch (e) {
-        console.warn("[AniList getAnimeDetailsByIds] Batch fetch failed, falling back per-item:", e);
       }
+    `;
+    const results: AniListAnime[] = [];
+
+    for (let offset = 0; offset < numericIds.length; offset += 50) {
+      const idBatch = numericIds.slice(offset, offset + 50);
+      let batch: AniListAnime[] | null = null;
+
+      if (!isAniListCircuitOpen()) {
+        try {
+          const data = await fetchAniList<{ Page: { media: AniListAnime[] } }>(query, { idMal_in: idBatch });
+          batch = data?.Page?.media.filter(isSafeAnime) || [];
+        } catch (e) {
+          console.warn("[AniList getAnimeDetailsByIds] Batch fetch failed, using local cache:", e);
+        }
+      }
+
+      if (batch !== null) {
+        results.push(...batch);
+        continue;
+      }
+
+      const cachedData = await fetchDbFallback<{ media: AniListAnime[] }>({
+        action: "details",
+        ids: idBatch.join(","),
+      });
+      results.push(...(cachedData?.media || []).filter(isSafeAnime));
     }
 
-    // Fallback: fetch individually (each goes through proxy + TanStack cache)
-    const results = await Promise.allSettled(
-      numericIds.map(id => jikanApi.getAnimeDetails(id).catch(() => null))
-    );
-    return results
-      .map(r => (r.status === "fulfilled" ? r.value : null))
-      .filter((a): a is AniListAnime => a !== null && isSafeAnime(a));
+    return results;
   },
 };

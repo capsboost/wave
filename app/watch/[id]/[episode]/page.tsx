@@ -1,10 +1,13 @@
 import type { Metadata } from "next";
 import { Suspense } from "react";
+import { cache } from "react";
 import { anilistApi, type AniListAnime } from "@/lib/api/anilist";
 import { cacheAnimeMetadataIfMissing } from "@/lib/api/cacheMetadata";
 import WatchClient from "./WatchClient";
 
 export const revalidate = 3600; // Cache for 1 hour
+
+const getAnimeDetails = cache((id: string) => anilistApi.getAnimeDetails(id));
 
 export async function generateMetadata({
   params,
@@ -13,7 +16,7 @@ export async function generateMetadata({
 }): Promise<Metadata> {
   const { id, episode } = await params;
   try {
-    const anime = await anilistApi.getAnimeDetails(id);
+    const anime = await getAnimeDetails(id);
     const title = anime?.title?.english || anime?.title?.romaji || "Anime";
     const year = anime?.seasonYear ? ` (${anime.seasonYear})` : "";
     const cover = anime?.bannerImage || anime?.coverImage?.extraLarge || anime?.coverImage?.large || "";
@@ -56,7 +59,7 @@ export default async function Page({
   let episodeSchema: Record<string, unknown> | null = null;
   let anime: AniListAnime | null = null;
   try {
-    anime = await anilistApi.getAnimeDetails(id);
+    anime = await getAnimeDetails(id);
     if (anime) {
       // Dynamically cache new anime metadata to Neon DB for Tier 3/4 fallback (0 writes if already cached)
       cacheAnimeMetadataIfMissing(anime).catch(() => {});
@@ -93,4 +96,3 @@ export default async function Page({
     </>
   );
 }
-
