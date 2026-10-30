@@ -9,6 +9,7 @@ import { Lock, Loader2, Bookmark, History, Trash2, Play, RefreshCw } from "lucid
 import { ProfileAnimeCard } from "@/components/profile/ProfileAnimeCard";
 import { useWatchStore } from "@/store/useWatchStore";
 import { ConfirmModal } from "@/components/ui/ConfirmModal";
+import { RouteLoading } from "@/components/ui/RouteLoading";
 import { useWatchlist } from "@/hooks/useWatchlist";
 import { useAnimeDetailsBatch } from "@/hooks/useAnime";
 import type { AniListAnime } from "@/lib/api/anilist";
@@ -106,7 +107,7 @@ export default function ProfileClient() {
     }
   };
 
-  if (isPending || !session) return <div role="status" aria-live="polite" className="min-h-screen bg-void-black flex items-center justify-center text-neon-crimson"><Loader2 className="w-10 h-10 animate-spin" aria-hidden="true" /><span className="sr-only">Loading profile</span></div>;
+  if (isPending || !session) return <RouteLoading message="Loading profile..." />;
 
   return (
     <div className="min-h-screen bg-void-black pt-24 pb-20 px-margin-mobile md:px-margin-desktop text-on-surface bg-[url('/noise.png')] bg-repeat">
@@ -159,10 +160,7 @@ export default function ProfileClient() {
               <div className="animate-in fade-in duration-300">
                 <h3 className="font-headline-lg text-2xl text-white mb-6 uppercase">My Watchlist</h3>
                 {(loadingData || (watchlist.length > 0 && loadingBatch)) ? (
-                  <div role="status" aria-live="polite" className="flex flex-col items-center justify-center gap-3 py-12 text-neon-crimson">
-                    <Loader2 className="w-8 h-8 animate-spin" aria-hidden="true" />
-                    <span className="font-label-caps text-xs text-on-surface-variant">Loading watchlist...</span>
-                  </div>
+                  <RouteLoading message="Loading watchlist..." compact />
                 ) : watchlistError ? (
                   <div role="alert" className="border border-neon-crimson/40 bg-neon-crimson/5 p-6 text-center">
                     <p className="font-label-caps text-sm text-on-surface">Your watchlist could not be loaded.</p>

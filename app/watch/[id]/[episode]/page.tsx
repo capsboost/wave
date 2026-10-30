@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Suspense } from "react";
 import WatchClient from "./WatchClient";
+import { RouteLoading } from "@/components/ui/RouteLoading";
 
 export const metadata: Metadata = {
   title: "Watch Anime Online",
@@ -15,7 +16,7 @@ export default async function Page({
   const { id, episode } = await params;
 
   return (
-    <Suspense fallback={<div className="min-h-screen bg-void-black flex items-center justify-center text-neon-crimson font-mono text-sm tracking-widest uppercase">INITIALIZING FEED...</div>}>
+    <Suspense fallback={<RouteLoading message="Initializing feed..." />}>
       <WatchClient id={id} episode={episode} />
     </Suspense>
   );

@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { Suspense } from "react";
 import SearchClient from "./SearchClient";
-import { Loader2 } from "lucide-react";
+import { RouteLoading } from "@/components/ui/RouteLoading";
 
 export const metadata: Metadata = {
   title: "Browse Anime Catalog & Directory - Filter by Genre, Year & Rating",
@@ -28,9 +28,7 @@ export default function Page() {
   return (
     <Suspense 
       fallback={
-        <div className="flex-1 flex items-center justify-center min-h-screen bg-void-black">
-          <Loader2 className="w-12 h-12 text-cyber-cyan animate-spin" />
-        </div>
+        <RouteLoading message="Loading catalog..." />
       }
     >
       <SearchClient />
