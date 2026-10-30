@@ -58,6 +58,17 @@ export function Navbar() {
     return () => window.removeEventListener("scroll", handleScroll);
   }, [isMobileMenuOpen, isProfileMenuOpen, isFocused, isMobileSearchOpen, isNotificationPanelOpen]);
 
+  useEffect(() => {
+    if (!isMobileMenuOpen) return;
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") setIsMobileMenuOpen(false);
+    };
+
+    document.addEventListener("keydown", handleKeyDown);
+    return () => document.removeEventListener("keydown", handleKeyDown);
+  }, [isMobileMenuOpen]);
+
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
     if (query.trim().length >= 2) {
@@ -312,33 +323,45 @@ export function Navbar() {
 
       {/* Mobile Navigation Menu */}
       {isMobileMenuOpen && (
-        <div id="mobile-navigation-menu" className="xl:hidden absolute top-full left-0 w-full bg-void-black/95 backdrop-blur-2xl border-b border-neon-crimson/50 flex flex-col shadow-[0_20px_40px_rgba(255,0,60,0.15)] z-40 animate-in slide-in-from-top-2 duration-300">
-          <div className="flex flex-col p-4 gap-3">
+        <div
+          id="mobile-navigation-menu"
+          aria-label="Mobile navigation"
+          className="xl:hidden absolute top-full left-0 flex min-h-[calc(100dvh-4.5rem)] max-h-[calc(100dvh-4.5rem)] w-full flex-col overflow-y-auto overscroll-contain border-b border-neon-crimson/50 bg-void-black/98 backdrop-blur-2xl shadow-[0_20px_40px_rgba(255,0,60,0.15)] z-40 animate-in slide-in-from-top-2 duration-300"
+        >
+          <div className="flex flex-1 flex-col p-margin-mobile">
+            <div className="mb-4 flex items-center justify-between border-b border-outline-variant/30 pb-3">
+              <span className="font-label-caps text-xs tracking-[0.24em] text-on-surface-variant">
+                Navigation
+              </span>
+              <span className="font-label-caps text-[10px] tracking-widest text-cyber-cyan/70">
+                WAVE // MOBILE
+              </span>
+            </div>
             <Link
               href="/"
               onClick={() => setIsMobileMenuOpen(false)}
-              className={`px-4 py-3 font-label-caps uppercase clip-chip transition-all ${pathname === "/" ? "text-neon-crimson bg-neon-crimson/10 border-l-2 border-neon-crimson" : "text-on-surface bg-surface-container/40 hover:bg-surface-glass"}`}
+              className={`flex min-h-12 items-center px-4 py-3 font-label-caps uppercase clip-chip transition-all ${pathname === "/" ? "text-neon-crimson bg-neon-crimson/10 border-l-2 border-neon-crimson" : "text-on-surface bg-surface-container/40 hover:bg-surface-glass"}`}
             >
               Home
             </Link>
             <Link
               href="/schedule"
               onClick={() => setIsMobileMenuOpen(false)}
-              className={`px-4 py-3 font-label-caps uppercase clip-chip transition-all ${pathname === "/schedule" ? "text-neon-crimson bg-neon-crimson/10 border-l-2 border-neon-crimson" : "text-on-surface bg-surface-container/40 hover:bg-surface-glass"}`}
+              className={`flex min-h-12 items-center px-4 py-3 font-label-caps uppercase clip-chip transition-all ${pathname === "/schedule" ? "text-neon-crimson bg-neon-crimson/10 border-l-2 border-neon-crimson" : "text-on-surface bg-surface-container/40 hover:bg-surface-glass"}`}
             >
               Schedule
             </Link>
             <Link
               href="/search"
               onClick={() => setIsMobileMenuOpen(false)}
-              className={`px-4 py-3 font-label-caps uppercase clip-chip transition-all ${pathname === "/search" ? "text-neon-crimson bg-neon-crimson/10 border-l-2 border-neon-crimson" : "text-on-surface bg-surface-container/40 hover:bg-surface-glass"}`}
+              className={`flex min-h-12 items-center px-4 py-3 font-label-caps uppercase clip-chip transition-all ${pathname === "/search" ? "text-neon-crimson bg-neon-crimson/10 border-l-2 border-neon-crimson" : "text-on-surface bg-surface-container/40 hover:bg-surface-glass"}`}
             >
               Catalog
             </Link>
             <Link
               href="/continue-watching"
               onClick={() => setIsMobileMenuOpen(false)}
-              className={`px-4 py-3 font-label-caps uppercase clip-chip transition-all ${pathname === "/continue-watching" ? "text-neon-crimson bg-neon-crimson/10 border-l-2 border-neon-crimson" : "text-on-surface bg-surface-container/40 hover:bg-surface-glass"}`}
+              className={`flex min-h-12 items-center px-4 py-3 font-label-caps uppercase clip-chip transition-all ${pathname === "/continue-watching" ? "text-neon-crimson bg-neon-crimson/10 border-l-2 border-neon-crimson" : "text-on-surface bg-surface-container/40 hover:bg-surface-glass"}`}
             >
               Recents
             </Link>
@@ -347,7 +370,7 @@ export function Navbar() {
               target="_blank"
               rel="noopener noreferrer"
               onClick={() => setIsMobileMenuOpen(false)}
-              className="px-4 py-3 font-label-caps uppercase clip-chip text-on-surface bg-surface-container/40 hover:bg-surface-glass transition-all"
+              className="flex min-h-12 items-center px-4 py-3 font-label-caps uppercase clip-chip text-on-surface bg-surface-container/40 hover:bg-surface-glass transition-all"
             >
               Movies & TV Shows
             </a>
@@ -356,7 +379,7 @@ export function Navbar() {
               target="_blank"
               rel="noopener noreferrer"
               onClick={() => setIsMobileMenuOpen(false)}
-              className="px-4 py-3 font-label-caps uppercase clip-chip text-on-surface bg-surface-container/40 hover:bg-surface-glass transition-all"
+              className="flex min-h-12 items-center px-4 py-3 font-label-caps uppercase clip-chip text-on-surface bg-surface-container/40 hover:bg-surface-glass transition-all"
             >
               Sports
             </a>
