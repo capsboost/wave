@@ -317,10 +317,10 @@ export default function AnimeClient({ id }: AnimeClientProps) {
                 ))}
               </div>
               
-              <div className="flex flex-wrap items-center gap-4 mt-6">
+              <div className="flex flex-col sm:flex-row sm:flex-wrap items-stretch sm:items-center gap-3 mt-6">
                 <Link 
                   href={`/watch/${id}/${targetEpisode}?lang=${finalResumeLang}`}
-                  className="flex items-center justify-center gap-2 bg-neon-crimson text-void-black font-label-caps font-bold px-8 py-4 clip-corner hover:bg-white hover:drop-shadow-[0_0_15px_rgba(255,0,60,0.6)] transition-all duration-300 scale-105 active:scale-95 group"
+                  className="flex w-full sm:w-auto items-center justify-center gap-2 bg-neon-crimson text-void-black font-label-caps font-bold px-8 py-3.5 min-h-12 clip-corner hover:bg-white hover:drop-shadow-[0_0_15px_rgba(255,0,60,0.6)] transition-all duration-300 sm:hover:scale-105 active:scale-95 group"
                 >
                   <Play className="w-5 h-5 fill-void-black group-hover:scale-110 transition-transform" />
                   {resumeInfo?.hasProgress
@@ -336,7 +336,7 @@ export default function AnimeClient({ id }: AnimeClientProps) {
                 {resumeInfo?.hasProgress && (resumeInfo.episode > 1 || resumeInfo.isCompleted) && (
                   <Link
                     href={`/watch/${id}/1?lang=${language === "dub" && counts && counts.is_dub !== null && 1 > counts.is_dub ? "sub" : language}`}
-                    className="font-label-caps text-xs text-on-surface-variant hover:text-white border border-outline-variant/50 hover:border-cyber-cyan px-4 py-4 clip-chip transition-colors"
+                    className="flex w-full sm:w-auto items-center justify-center min-h-12 font-label-caps text-xs text-on-surface-variant hover:text-white border border-outline-variant/50 hover:border-cyber-cyan px-4 py-3.5 clip-chip transition-colors"
                   >
                     WATCH EP 1
                   </Link>

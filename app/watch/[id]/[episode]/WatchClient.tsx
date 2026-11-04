@@ -3,7 +3,7 @@
 import Link from "next/link";
 import Image from "next/image";
 import { useEffect, useState, useRef } from "react";
-import { ArrowLeft, MessageSquare, Mic, FastForward } from "lucide-react";
+import { ArrowLeft, ChevronLeft, ChevronRight, MessageSquare, Mic, FastForward } from "lucide-react";
 import { useAnimeDetails } from "@/hooks/useAnime";
 import { type AniListAnime, isSafeAnime } from "@/lib/api/anilist";
 import { RouteLoading } from "@/components/ui/RouteLoading";
@@ -321,6 +321,22 @@ export default function WatchClient({ id, episode }: WatchClientProps) {
   const startEp = activeChunk * CHUNK_SIZE + 1;
   const endEp = Math.min((activeChunk + 1) * CHUNK_SIZE, finalNumEpisodes);
   const currentEpisodes = Array.from({ length: Math.max(0, endEp - startEp + 1) }, (_, i) => startEp + i);
+  const previousEpisode = epNum > 1 ? epNum - 1 : null;
+  const nextEpisode = epNum + 1;
+  const isNextEpisodeDisabled = maxAvailableEpisodes > 0 && nextEpisode > maxAvailableEpisodes;
+  const previousLanguage = previousEpisode !== null &&
+    effectiveLanguage === "dub" &&
+    counts?.is_dub !== null &&
+    counts?.is_dub !== undefined &&
+    previousEpisode > counts.is_dub
+    ? "sub"
+    : effectiveLanguage;
+  const nextLanguage = effectiveLanguage === "dub" &&
+    counts?.is_dub !== null &&
+    counts?.is_dub !== undefined &&
+    nextEpisode > counts.is_dub
+    ? "sub"
+    : effectiveLanguage;
 
   return (
     <div className="flex-1 bg-void-black min-h-screen pb-20 pt-18">
@@ -353,8 +369,8 @@ export default function WatchClient({ id, episode }: WatchClientProps) {
           </section>
 
           {/* Player Controls Bar */}
-          <div className="w-full bg-surface-container-lowest border-b border-surface-variant p-4 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-            <div>
+          <div className="w-full bg-surface-container-lowest border-b border-surface-variant p-3 sm:p-4 flex flex-col lg:flex-row justify-between items-stretch lg:items-center gap-4">
+            <div className="min-w-0">
               <div className="flex flex-wrap items-center gap-2 mb-1">
                 <span className="font-label-caps text-cyber-cyan uppercase tracking-widest border border-cyber-cyan px-2 py-0.5 text-xs clip-corner bg-cyber-cyan/10">
                   {anime.format || "TV"}
@@ -368,58 +384,101 @@ export default function WatchClient({ id, episode }: WatchClientProps) {
               </h1>
             </div>
 
-            <div className="flex flex-wrap items-center gap-3 bg-surface-container px-4 py-2 clip-chip border border-outline-variant/30">
-              {/* Sub / Dub Selector */}
-              <div className="flex items-center gap-1.5">
+            <div className="w-full lg:w-auto grid grid-cols-2 sm:flex items-center gap-2 bg-surface-container p-2 sm:px-3 sm:py-2.5 clip-chip border border-outline-variant/30">
+              <div className="col-span-2 flex items-center gap-2 sm:col-span-1">
+                {/* Sub / Dub Selector */}
+                <div className="flex flex-1 items-center justify-center gap-1.5 shrink-0">
+                  <button
+                    type="button"
+                    onClick={() => setLanguage("sub")}
+                    className={`flex flex-1 items-center justify-center gap-1.5 min-h-10 font-label-caps text-xs px-2 sm:flex-none sm:px-3 transition-all cursor-pointer clip-chip ${
+                      effectiveLanguage === "sub"
+                        ? 'bg-neon-crimson text-void-black font-bold shadow-[0_0_10px_rgba(255,0,60,0.5)]'
+                        : 'bg-surface-container-low text-on-surface-variant hover:bg-surface-glass hover:text-white'
+                    }`}
+                  >
+                    <MessageSquare className="w-3 h-3" /> SUB
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (isDubAvailable) {
+                        setLanguage("dub");
+                      }
+                    }}
+                    disabled={!isDubAvailable}
+                    className={`flex flex-1 items-center justify-center gap-1.5 min-h-10 font-label-caps text-xs px-2 sm:flex-none sm:px-3 transition-all clip-chip ${
+                      effectiveLanguage === "dub"
+                        ? 'bg-neon-crimson text-void-black font-bold shadow-[0_0_10px_rgba(255,0,60,0.5)]'
+                        : 'bg-surface-container-low text-on-surface-variant hover:bg-surface-glass hover:text-white'
+                    } ${!isDubAvailable ? 'opacity-30 cursor-not-allowed pointer-events-none' : 'cursor-pointer'}`}
+                    title={getDubTooltip(isDubAvailable, counts?.is_dub)}
+                  >
+                    <Mic className="w-3 h-3" /> DUB
+                  </button>
+                </div>
+
+                {/* Auto Next */}
                 <button 
                   type="button"
-                  onClick={() => setLanguage("sub")}
-                  className={`flex items-center gap-1.5 font-label-caps text-xs px-3 py-1.5 transition-all cursor-pointer clip-chip ${
-                    effectiveLanguage === "sub" 
-                      ? 'bg-neon-crimson text-void-black font-bold shadow-[0_0_10px_rgba(255,0,60,0.5)]' 
-                      : 'bg-surface-container-low text-on-surface-variant hover:bg-surface-glass hover:text-white'
+                  onClick={() => setAutoNext(!autoNext)}
+                  className={`flex flex-1 items-center justify-center gap-1.5 min-h-10 font-label-caps text-xs px-2 border transition-all cursor-pointer clip-chip sm:flex-none sm:gap-2 sm:px-3 ${
+                    autoNext
+                      ? 'border-neon-crimson text-neon-crimson bg-neon-crimson/10 shadow-[0_0_10px_rgba(255,0,60,0.2)]'
+                      : 'border-outline-variant text-on-surface-variant hover:text-white hover:border-white'
                   }`}
                 >
-                  <MessageSquare className="w-3 h-3" /> SUB
-                </button>
-                <button 
-                  type="button"
-                  onClick={() => {
-                    if (isDubAvailable) {
-                      setLanguage("dub");
-                    }
-                  }}
-                  disabled={!isDubAvailable}
-                  className={`flex items-center gap-1.5 font-label-caps text-xs px-3 py-1.5 transition-all clip-chip ${
-                    effectiveLanguage === "dub" 
-                      ? 'bg-neon-crimson text-void-black font-bold shadow-[0_0_10px_rgba(255,0,60,0.5)]' 
-                      : 'bg-surface-container-low text-on-surface-variant hover:bg-surface-glass hover:text-white'
-                  } ${!isDubAvailable ? 'opacity-30 cursor-not-allowed pointer-events-none' : 'cursor-pointer'}`}
-                  title={getDubTooltip(isDubAvailable, counts?.is_dub)}
-                >
-                  <Mic className="w-3 h-3" /> DUB
+                  <FastForward className="w-3.5 h-3.5 shrink-0" />
+                  <span>AUTO NEXT</span>
                 </button>
               </div>
 
               <div className="w-px h-6 bg-outline-variant/50 hidden sm:block"></div>
-              
-              {/* Auto Next */}
-              <button 
-                type="button"
-                onClick={() => setAutoNext(!autoNext)}
-                className={`flex items-center gap-2 font-label-caps text-xs px-3 py-1.5 border transition-all cursor-pointer clip-chip ${
-                  autoNext 
-                    ? 'border-neon-crimson text-neon-crimson bg-neon-crimson/10 shadow-[0_0_10px_rgba(255,0,60,0.2)]' 
-                    : 'border-outline-variant text-on-surface-variant hover:text-white hover:border-white'
-                }`}
-              >
-                <FastForward className="w-3.5 h-3.5 shrink-0" /> 
-                <span>AUTO NEXT</span>
-              </button>
 
-              <div className="w-px h-6 bg-outline-variant/50"></div>
+              {/* Episode Navigation */}
+              <div className="col-span-2 flex items-center gap-2 sm:col-span-1">
+                {previousEpisode !== null ? (
+                  <Link
+                    href={`/watch/${id}/${previousEpisode}?lang=${previousLanguage}`}
+                    className="flex flex-1 items-center justify-center gap-1.5 min-h-10 sm:flex-none font-label-caps text-xs px-3 border border-outline-variant text-on-surface-variant hover:border-cyber-cyan hover:text-cyber-cyan transition-colors clip-chip"
+                    aria-label={`Go to episode ${previousEpisode}`}
+                  >
+                    <ChevronLeft className="w-3.5 h-3.5" />
+                    <span>PREV</span>
+                  </Link>
+                ) : (
+                  <span
+                    className="flex flex-1 items-center justify-center gap-1.5 min-h-10 sm:flex-none font-label-caps text-xs px-3 border border-outline-variant/40 text-on-surface-variant/40 clip-chip cursor-not-allowed"
+                    aria-disabled="true"
+                  >
+                    <ChevronLeft className="w-3.5 h-3.5" />
+                    <span>PREV</span>
+                  </span>
+                )}
+
+                {isNextEpisodeDisabled ? (
+                  <span
+                    className="flex flex-1 items-center justify-center gap-1.5 min-h-10 sm:flex-none font-label-caps text-xs px-3 border border-outline-variant/40 text-on-surface-variant/40 clip-chip cursor-not-allowed"
+                    aria-disabled="true"
+                  >
+                    <span>NEXT</span>
+                    <ChevronRight className="w-3.5 h-3.5" />
+                  </span>
+                ) : (
+                  <Link
+                    href={`/watch/${id}/${nextEpisode}?lang=${nextLanguage}`}
+                    className="flex flex-1 items-center justify-center gap-1.5 min-h-10 sm:flex-none font-label-caps text-xs px-3 border border-outline-variant text-on-surface-variant hover:border-cyber-cyan hover:text-cyber-cyan transition-colors clip-chip"
+                    aria-label={`Go to episode ${nextEpisode}`}
+                  >
+                    <span>NEXT</span>
+                    <ChevronRight className="w-3.5 h-3.5" />
+                  </Link>
+                )}
+              </div>
+
+              <div className="w-px h-6 bg-outline-variant/50 hidden sm:block"></div>
               
-              <WatchlistButton animeId={id} className="px-3 py-1.5 bg-transparent border-none hover:bg-surface-glass text-xs cursor-pointer" showText={false} />
+              <WatchlistButton animeId={id} className="col-span-2 w-full min-h-10 px-3 py-1.5 bg-transparent border-outline-variant hover:bg-surface-glass text-xs cursor-pointer sm:col-span-1 sm:w-auto" showText={false} />
             </div>
           </div>
 
